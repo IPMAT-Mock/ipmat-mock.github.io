@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPMAT Practice Exam</title>
+<style>
+:root{
+  --bg:#faf9f7; --panel:#ffffff; --panel-2:#f4f2ee; --ink:#1f1d1a; --ink-soft:#5b564e;
+  --line:#e6e2db; --line-strong:#d6d0c6; --accent:#1d4ed8; --accent-soft:#e3ebfb;
+  --good:#2f8f5b; --good-soft:#e3f2e9; --bad:#c5423a; --bad-soft:#f7e3e1; --warn:#c78a00;
+  --flag:#c78a00; --flag-soft:#f6eccf; --shadow:0 1px 2px rgba(30,25,20,.06),0 6px 24px rgba(30,25,20,.06);
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel-2:#273449; --ink:#f2efe8; --ink-soft:#b7b0a3;
+    --line:#332e25; --line-strong:#433d31; --accent:#818cf8; --accent-soft:#262a52;
+    --good:#5fbd85; --good-soft:#1f2f25; --bad:#e0776d; --bad-soft:#33211f; --warn:#e0b34a;
+    --flag:#e0b34a; --flag-soft:#332a17; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f172a; --panel:#1e293b; --panel-2:#273449; --ink:#f2efe8; --ink-soft:#b7b0a3;
+  --line:#334155; --line-strong:#475569; --accent:#818cf8; --accent-soft:#262a52;
+  --good:#5fbd85; --good-soft:#1f2f25; --bad:#e0776d; --bad-soft:#33211f; --warn:#e0b34a;
+  --flag:#e0b34a; --flag-soft:#332a17; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  --bg:#faf9f7; --panel:#ffffff; --panel-2:#f4f2ee; --ink:#1f1d1a; --ink-soft:#5b564e;
+  --line:#e6e2db; --line-strong:#d6d0c6; --accent:#1d4ed8; --accent-soft:#e3ebfb;
+  --good:#2f8f5b; --good-soft:#e3f2e9; --bad:#c5423a; --bad-soft:#f7e3e1; --warn:#c78a00;
+  --flag:#c78a00; --flag-soft:#f6eccf; --shadow:0 1px 2px rgba(30,25,20,.06),0 6px 24px rgba(30,25,20,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 18px 64px}
+h1,h2,h3{line-height:1.25;margin:0}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line-strong);background:var(--panel);color:var(--ink);border-radius:10px;padding:10px 16px;font-weight:600;transition:.12s}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.badge.d1{background:var(--accent-soft);color:var(--accent)}
+.badge.d2{background:var(--good-soft);color:var(--good)}
+.badge.d3{background:var(--flag-soft);color:var(--flag)}
+.badge.d4{background:#e7e0f3;color:#7a5bc2}
+.badge.d5{background:#dfeaf4;color:#3f7bb0}
+.badge.sc{background:var(--panel-2);color:var(--ink-soft)}
+.badge.diff{background:transparent;border:1px solid var(--line-strong);color:var(--ink-soft)}
+.muted{color:var(--ink-soft)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);margin:-20px -18px 18px;padding:12px 18px}
+.topbar .row{display:flex;align-items:center;gap:12px;max-width:1080px;margin:0 auto;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:-.01em}
+.brand .dot{color:var(--accent)}
+.spacer{flex:1}
+.modeTag{font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line)}
+.timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;padding:6px 12px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.timer.warn{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.timer.paused{background:var(--flag-soft);color:var(--flag);border-color:var(--flag)}
+.timer .pz{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.progress{height:6px;background:var(--panel-2);border-radius:999px;overflow:hidden;flex-basis:140px;flex-grow:1;max-width:260px}
+.progress > i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+/* layout */
+.exam{display:grid;grid-template-columns:1fr 250px;gap:20px;align-items:start}
+@media (max-width:860px){.exam{grid-template-columns:1fr}}
+.qcard{padding:24px 26px}
+.qmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.qnum{font-weight:800;color:var(--ink-soft);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+.stem{font-size:17.5px;font-weight:550;margin:6px 0 20px}
+.opts{display:flex;flex-direction:column;gap:11px}
+.opt{display:flex;gap:13px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:14px 15px;transition:.12s;background:var(--panel);cursor:pointer}
+.opt:hover{border-color:var(--line-strong);background:var(--panel-2)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt .key{flex:none;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--ink-soft)}
+.opt.sel .key{background:var(--accent);border-color:var(--accent);color:#fff}
+.opt .txt{flex:1;padding-top:2px}
+.opt.locked{cursor:default}
+.opt.locked:hover{background:var(--panel)}
+.opt.correct{border-color:var(--good);background:var(--good-soft)}
+.opt.correct:hover{background:var(--good-soft)}
+.opt.correct .key{background:var(--good);border-color:var(--good);color:#fff}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong:hover{background:var(--bad-soft)}
+.opt.wrong .key{background:var(--bad);border-color:var(--bad);color:#fff}
+.mk{font-size:12px;font-weight:800;margin-left:8px}
+.mk.g{color:var(--good)}.mk.r{color:var(--bad)}
+.fb{margin-top:16px;border-radius:10px;padding:11px 14px;font-weight:700;display:flex;align-items:center;gap:9px}
+.fb.ok{background:var(--good-soft);color:var(--good)}
+.fb.no{background:var(--bad-soft);color:var(--bad)}
+.expl{margin-top:12px;background:var(--panel-2);border-left:3px solid var(--accent);border-radius:8px;padding:13px 15px;font-size:14.5px}
+.expl b{color:var(--accent)}
+.navrow{display:flex;gap:10px;align-items:center;margin-top:22px;flex-wrap:wrap}
+.flagbtn{border:1px solid var(--line-strong);background:var(--panel);border-radius:10px;padding:9px 14px;font-weight:600;color:var(--ink-soft)}
+.flagbtn.on{background:var(--flag-soft);border-color:var(--flag);color:var(--flag)}
+/* palette */
+.side{position:sticky;top:74px}
+.palette{padding:16px}
+.palette h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.cell{aspect-ratio:1;border:1.5px solid var(--line);border-radius:8px;background:var(--panel);font-weight:700;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}
+.cell.answered{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.cell.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.cell.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.cell.current{outline:2px solid var(--ink);outline-offset:1px}
+.cell.flag::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--flag)}
+.legend{margin-top:14px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-soft)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:13px;height:13px;border-radius:4px;border:1.5px solid var(--line)}
+.sw.a{background:var(--accent-soft);border-color:var(--accent)}
+.sw.g{background:var(--good-soft);border-color:var(--good)}
+.sw.r{background:var(--bad-soft);border-color:var(--bad)}
+.sw.f{background:var(--flag-soft);border-color:var(--flag)}
+/* start & results */
+.hero{padding:34px 34px 30px;text-align:left}
+.hero h1{font-size:30px;letter-spacing:-.02em}
+.hero .sub{color:var(--accent);font-weight:700;margin-top:6px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0}
+.fact{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.fact b{display:block;font-size:20px;font-weight:800}
+.fact span{font-size:12.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+.note{background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:12px;padding:14px 16px;font-size:14.5px;margin:6px 0 22px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0 6px}
+@media (max-width:640px){.modes{grid-template-columns:1fr}}
+.modeopt{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line-strong);border-radius:12px;padding:14px 15px;cursor:pointer;background:var(--panel);transition:.12s}
+.modeopt:hover{border-color:var(--accent)}
+.modeopt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.modeopt .mi{font-size:22px;line-height:1}
+.modeopt b{display:block;margin-bottom:3px}
+.modeopt span{font-size:13px;color:var(--ink-soft)}
+/* IPMAT score cards */
+.scorehead{display:flex;gap:26px;align-items:center;flex-wrap:wrap;padding:30px 34px}
+.scoremain b.big{font-size:44px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.scoremain .of{color:var(--ink-soft);font-weight:700}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:0 34px 10px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center}
+.stat b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+.stat.good b{color:var(--good)} .stat.bad b{color:var(--bad)} .stat.warn b{color:var(--warn)}
+.dbars{padding:6px 34px 26px}
+.dbar{margin:14px 0}
+.dbar .lab{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px;gap:10px}
+.dbar .track{height:10px;background:var(--panel-2);border-radius:999px;overflow:hidden}
+.dbar .track > i{display:block;height:100%;border-radius:999px}
+.reviewhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:26px 0 14px}
+.filterbtn{border:1px solid var(--line-strong);background:var(--panel);border-radius:999px;padding:7px 14px;font-weight:600;font-size:13.5px}
+.filterbtn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rev{padding:20px 24px;margin-bottom:14px}
+.rev .rq{font-weight:600;font-size:16px;margin:8px 0 14px}
+.tag{font-size:12px;color:var(--ink-soft)}
+.hide{display:none!important}
+.center{text-align:center}
+.themeToggle{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:6px 10px;font-size:13px;font-weight:600}
+.footnote{font-size:12.5px;color:var(--ink-soft);margin-top:26px;text-align:center}
+kbd{font:600 12px ui-monospace,monospace;background:var(--panel-2);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:6px;padding:1px 6px}
+.loader{margin:18px 0;padding:16px 18px;border:1.5px dashed var(--line-strong);border-radius:var(--radius);background:var(--panel-2);display:flex;flex-direction:column;gap:10px}
+.loader .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.loader .status{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+.loader .status .dot{width:8px;height:8px;border-radius:50%;flex:none}
+.loader .status .dot.custom{background:var(--good)}
+.loader .status .dot.default{background:var(--ink-soft)}
+.loader input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar" id="topbar">
+    <div class="row">
+      <div class="brand">IPMAT <span class="dot">•</span> <span id="brandKind">Practice Mock</span></div>
+      <div class="spacer"></div>
+      <div class="modeTag hide" id="modeTag"></div>
+      <div class="progress hide" id="progWrap"><i id="progBar"></i></div>
+      <div class="timer hide" id="timer">--:--</div>
+      <button class="themeToggle" id="themeToggle" title="Toggle theme">◑ Theme</button>
+    </div>
+  </div>
+
+  <!-- START -->
+  <section id="startScreen">
+    <div class="card hero">
+      <h1 id="examTitle">IPMAT Mock</h1>
+      <div class="sub" id="examSub">Practice Exam</div>
+      <div class="facts" id="facts"></div>
+      <div class="note" id="examNote"></div>
+      <h3 style="margin-bottom:10px">Choose a mode</h3>
+      <div class="modes" id="modes">
+        <label class="modeopt sel" data-mode="study">
+          <div class="mi">📖</div>
+          <div><b>Study mode</b><span>Pick an answer, then hit <b>Check answer</b> to see the solution — the timer <b>pauses</b> while you read. Best for learning topic by topic.</span></div>
+        </label>
+        <label class="modeopt" data-mode="exam">
+          <div class="mi">📝</div>
+          <div><b>Exam mode</b><span>Real IPMAT simulation: <b>+4 for correct, −1 for wrong</b>, no feedback until you submit. Best for a realistic dry run.</span></div>
+        </label>
+      </div>
+      <h3 style="margin:20px 0 10px">How this works</h3>
+      <ul class="muted" style="margin-top:0;padding-left:20px;line-height:1.7">
+        <li>Every question has <b>one</b> correct option. IPMAT marking: <b>+4</b> correct, <b>−1</b> wrong, <b>0</b> skipped.</li>
+        <li>Use <b>Previous / Next</b>, flag doubts with <b>⚑ Flag</b>, and jump with the question palette. The screen <b>auto-scrolls to the top</b> of each question — no manual scrolling.</li>
+        <li>In <b>study mode</b> press <b>Check answer</b> to lock and reveal the solution. In <b>exam mode</b> change answers freely until submit.</li>
+        <li>Submit to see your <b>raw IPMAT score</b>, accuracy, topic-wise bars, and full solutions. Shortcuts: <kbd>A</kbd>–<kbd>D</kbd> / <kbd>1</kbd>–<kbd>4</kbd> · <kbd>←</kbd>/<kbd>→</kbd> · <kbd>F</kbd> flag.</li>
+      </ul>
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn primary" id="startBtn">Start →</button>
+        <button class="btn ghost hide" id="resumeBtn">Resume in-progress attempt</button>
+      </div>
+      <div class="loader" id="loader">
+        <div style="font-weight:700;font-size:14px">Question set</div>
+        <div class="row">
+          <button class="btn" id="loadBtn">Choose JSON file…</button>
+          <input type="file" id="fileInput" accept=".json">
+          <span class="status" id="loadStatus"><span class="dot default"></span> Loading…</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--ink-soft)">
+          Auto-loads <code>ipmat_30q_comprehensive.json</code> from the same folder when present. Custom JSON needs per question: <code>stem</code>, <code>options</code> (≥2), <code>answer</code> (index). Optional: <code>scenario</code> (topic), <code>domain</code>, <code>task</code>, <code>difficulty</code>, <code>explanation</code>, <code>id</code>.
+        </div>
+        <div class="row hide" id="resetRow">
+          <button class="btn ghost" id="resetBtn">↻ Reset to auto-loaded set</button>
+        </div>
+      </div>
+    </div>
+    <p class="footnote">Unofficial practice tool for IPMAT aspirants. Marking follows the IPMAT pattern (+4 / −1). Not affiliated with IIM Indore / Rohtak.</p>
+  </section>
+
+  <!-- EXAM -->
+  <section id="examScreen" class="hide">
+    <div class="exam">
+      <div>
+        <div class="card qcard" id="qcard"></div>
+        <div class="navrow">
+          <button class="btn" id="prevBtn">← Previous</button>
+          <button class="flagbtn" id="flagBtn">⚑ Flag</button>
+          <div class="spacer"></div>
+          <button class="btn" id="nextBtn">Next →</button>
+          <button class="btn primary" id="submitBtn">Submit exam</button>
+        </div>
+      </div>
+      <aside class="side">
+        <div class="card palette">
+          <h3>Questions</h3>
+          <div class="grid" id="palette"></div>
+          <div class="legend" id="legend"></div>
+          <div style="margin-top:14px" class="muted" id="answeredCount"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- RESULTS : IPMAT-style -->
+  <section id="resultScreen" class="hide">
+    <div class="card">
+      <div class="scorehead">
+        <div class="scoremain">
+          <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:800">IPMAT raw score (+4 / −1)</div>
+          <div style="margin-top:6px"><b class="big" id="rawScore">0</b> <span class="of" id="rawMax">/ 0</span></div>
+          <div class="muted" id="scoreDetail" style="margin-top:8px"></div>
+          <div class="muted" id="timeDetail" style="margin-top:4px"></div>
+        </div>
+        <div class="spacer"></div>
+        <div id="verdictBox" style="text-align:right"></div>
+      </div>
+      <div class="statgrid" id="statGrid"></div>
+      <div class="dbars">
+        <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px">Score by topic</h3>
+        <div id="topicBars"></div>
+        <h3 style="font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin:18px 0 6px">Score by difficulty</h3>
+        <div id="diffBars"></div>
+      </div>
+    </div>
+
+    <div class="reviewhead">
+      <h2 style="font-size:20px">Review &amp; solutions</h2>
+      <div class="spacer"></div>
+      <button class="filterbtn on" data-f="all">All</button>
+      <button class="filterbtn" data-f="incorrect">Incorrect + Skipped</button>
+      <button class="filterbtn" data-f="flagged">Flagged</button>
+    </div>
+    <div id="reviewList"></div>
+    <div class="center" style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn primary" id="retakeBtn">↻ Retake exam</button>
+      <button class="btn" id="backBtn">← Back to start</button>
+    </div>
+    <p class="footnote">Raw score = 4 × correct − 1 × wrong. Skipped = 0. Accuracy = correct ÷ attempted. There is no fixed IPMAT pass mark — compare raw scores across mocks and watch topic bars.</p>
+  </section>
+</div>
+
+<script>
+window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subtitle": "Demo set · full set auto-loads from ipmat_30q_comprehensive.json", "kind": "mock", "timeLimitSec": 3600, "note": "Place <b>ipmat_container_v5.html</b> in the same folder as <b>ipmat_30q_comprehensive.json</b> — the full 30-question set loads automatically. Or use <b>Choose JSON file…</b> below.", "questions": [
+{"scenario": "Quadratic Equations", "domain": 1, "task": "QA", "difficulty": "Easy", "stem": "Find the roots of x^2 − 5x + 6 = 0.", "options": ["x = 2 or x = 3", "x = −2 or x = −3", "x = 1 or x = 6", "x = −1 or x = −6"], "answer": 0, "explanation": "(x − 2)(x − 3) = 0, so x = 2 or x = 3.", "id": "demo-q1"},
+{"scenario": "Logarithms", "domain": 1, "task": "QA", "difficulty": "Easy", "stem": "Solve for x if log_5(x) = 3.", "options": ["x = 15", "x = 81", "x = 125", "x = 243"], "answer": 2, "explanation": "x = 5^3 = 125.", "id": "demo-q2"},
+{"scenario": "Probability", "domain": 1, "task": "QA", "difficulty": "Easy", "stem": "A fair die is rolled once. P(prime)?", "options": ["1/6", "1/3", "1/2", "2/3"], "answer": 2, "explanation": "Primes {2,3,5} → 3/6 = 1/2.", "id": "demo-q3"}
+]};
+</script>
+<script>
+(function(){
+  "use strict";
+  var CUSTOM_KEY = "ipmat_custom_exam_data";
+  var SIDECAR = "ipmat_30q_comprehensive.json";
+  var defaultD = window.EXAM_DATA;
+  var D = defaultD;
+  var Q = D.questions;
+  try {
+    var raw = localStorage.getItem(CUSTOM_KEY);
+    if (raw) { var parsed = JSON.parse(raw); if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) D = parsed; }
+  } catch(e) {}
+  var isCustom = (D !== defaultD);
+  Q = D.questions;
+  var LS = "ipmat_exam_v5_" + D.id;
+  var DOMAIN_NAMES = {1:"Quantitative Aptitude",2:"Verbal Ability & RC",3:"Logical Reasoning"};
+  function LETTERS(k){ var a="ABCDEFGHIJKLMNOPQRSTUVWXYZ"; return a[k] || ("#"+(k+1)); }
+  var state = load() || fresh();
+
+  function fresh(){ return {mode:"study",answers:{},flags:{},checked:{},started:false,submitted:false,remaining:D.timeLimitSec,cur:0}; }
+  function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
+  function load(){ try{ var s=localStorage.getItem(LS); var p=s?JSON.parse(s):null; if(p&&(typeof p.checked!=="object"||!p.checked)) p.checked={}; return p; }catch(e){ return null; } }
+  function reset(){ state=fresh(); save(); }
+
+  // ---------- theme ----------
+  var tRoot=document.documentElement, tBtn=document.getElementById("themeToggle");
+  var savedTheme=null; try{savedTheme=localStorage.getItem("ipmat_theme");}catch(e){}
+  if(savedTheme) tRoot.setAttribute("data-theme",savedTheme);
+  tBtn.onclick=function(){ var cur=tRoot.getAttribute("data-theme"); var next = cur==="dark"?"light":(cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark")); tRoot.setAttribute("data-theme",next); try{localStorage.setItem("ipmat_theme",next);}catch(e){} };
+
+  var el=function(id){return document.getElementById(id);};
+  var startScreen=el("startScreen"), examScreen=el("examScreen"), resultScreen=el("resultScreen");
+  var timerEl=el("timer"), progWrap=el("progWrap"), progBar=el("progBar");
+  var qcard=el("qcard"), palette=el("palette"), answeredCount=el("answeredCount");
+  var timerInt=null;
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function shortDomain(d){ return ({1:"QA",2:"VA-RC",3:"LR"})[d] || ("D"+d); }
+
+  // ---------- validation (flexible: >=2 options, any length) ----------
+  function validateQuestion(q,i){
+    if(!q||typeof q!=="object") return "Question #"+(i+1)+" is not an object.";
+    if(typeof q.stem!=="string"||!q.stem.trim()) return "Question #"+(i+1)+" is missing 'stem'.";
+    if(!Array.isArray(q.options)||q.options.length<2) return "Question #"+(i+1)+" must have at least 2 options.";
+    if(typeof q.answer!=="number"||q.answer<0||q.answer>=q.options.length) return "Question #"+(i+1)+" answer must be an index 0–"+(q.options.length-1)+".";
+    return null;
+  }
+  function validateSet(data){
+    if(!data||typeof data!=="object") return "Invalid JSON root: expected an object.";
+    if(!Array.isArray(data.questions)) return "Missing 'questions' array.";
+    if(data.questions.length===0) return "Questions array is empty.";
+    for(var i=0;i<data.questions.length;i++){ var err=validateQuestion(data.questions[i],i); if(err) return err; }
+    return null;
+  }
+
+  // ---------- start-screen paint ----------
+  function paintStart(){
+    document.title=D.title+" — "+(D.subtitle||"IPMAT Practice");
+    el("examTitle").textContent=D.title||"IPMAT Mock";
+    el("examSub").textContent=D.subtitle||"Practice Exam";
+    el("brandKind").textContent=D.title||"Practice Mock";
+    el("examNote").innerHTML=D.note||"IPMAT marking: <b>+4</b> correct, <b>−1</b> wrong, <b>0</b> skipped.";
+    var mins=Math.round((D.timeLimitSec||3600)/60);
+    var facts=[[String(Q.length),"Questions"],[mins+" min","Time limit"],["+4 / −1","IPMAT marking"],[String(maxOptions())+" options","One correct"]];
+    el("facts").innerHTML=facts.map(function(f){return '<div class="fact"><b>'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></div>';}).join("");
+    updateLoadStatus();
+    LS = "ipmat_exam_v5_" + D.id;
+    var st=null; try{ st=JSON.parse(localStorage.getItem(LS)); }catch(e){}
+    el("resumeBtn").classList.toggle("hide", !(st&&st.started&&!st.submitted));
+  }
+  function maxOptions(){ var m=4; Q.forEach(function(q){ if(q.options&&q.options.length>m) m=q.options.length; }); return m; }
+  function updateLoadStatus(){
+    var s=el("loadStatus"), r=el("resetRow");
+    if(isCustom){
+      s.innerHTML='<span class="dot custom"></span> Loaded custom: <b>'+esc(D.title||"Custom set")+'</b> ('+Q.length+' Q)';
+      r.classList.remove("hide");
+    } else if(D!==defaultD){
+      s.innerHTML='<span class="dot custom"></span> Auto-loaded: <b>'+esc(D.title||"IPMAT set")+'</b> ('+Q.length+' Q)';
+      r.classList.add("hide");
+    } else {
+      s.innerHTML='<span class="dot default"></span> Using demo set ('+Q.length+' Q) — add the 30Q JSON for the full mock';
+      r.classList.add("hide");
+    }
+  }
+
+  // Auto-load sidecar JSON from same folder (unless a custom file was chosen)
+  if(!isCustom){
+    fetch(SIDECAR, {cache:"no-store"}).then(function(res){
+      if(!res.ok) throw new Error("no sidecar");
+      return res.json();
+    }).then(function(data){
+      var err=validateSet(data);
+      if(err) throw new Error(err);
+      D=data; Q=D.questions; state=load()||fresh();
+      if(!state.remaining) state.remaining=D.timeLimitSec;
+      paintStart();
+      if(state.submitted){ showResults(); }
+      else if(state.started && !state.submitted){ el("resumeBtn").classList.remove("hide"); }
+    }).catch(function(){ paintStart(); });
+  }
+  paintStart();
+
+  el("loadBtn").onclick=function(){ el("fileInput").click(); };
+  el("fileInput").onchange=function(){
+    var file=this.files[0]; if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var data=JSON.parse(reader.result);
+        var err=validateSet(data);
+        if(err){ alert("Validation failed:\n"+err); return; }
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(data));
+        location.reload();
+      }catch(e){ alert("Could not parse JSON:\n"+e.message); }
+    };
+    reader.readAsText(file);
+    el("fileInput").value="";
+  };
+  el("resetBtn").onclick=function(){ localStorage.removeItem(CUSTOM_KEY); location.reload(); };
+
+  var chosenMode="study";
+  Array.prototype.forEach.call(document.querySelectorAll(".modeopt"),function(m){
+    m.onclick=function(){ Array.prototype.forEach.call(document.querySelectorAll(".modeopt"),function(x){x.classList.remove("sel");}); m.classList.add("sel"); chosenMode=m.getAttribute("data-mode"); };
+  });
+
+  if(state.started && !state.submitted){ el("resumeBtn").classList.remove("hide"); }
+  el("startBtn").onclick=function(){ reset(); state.mode=chosenMode; state.started=true; state.remaining=D.timeLimitSec; save(); enterExam(); };
+  el("resumeBtn").onclick=function(){ enterExam(); };
+  if(state.submitted){ showResults(); }
+
+  // ---------- exam ----------
+  function isStudy(){ return state.mode==="study"; }
+  function isChecked(id){ return !!state.checked[id]; }
+  function isPaused(){ return isStudy() && isChecked(Q[state.cur].id); }
+
+  function enterExam(){
+    startScreen.classList.add("hide"); resultScreen.classList.add("hide"); examScreen.classList.remove("hide");
+    progWrap.classList.remove("hide"); timerEl.classList.remove("hide");
+    var mt=el("modeTag"); mt.classList.remove("hide"); mt.textContent=isStudy()?"📖 Study mode · +4/−1 on submit":"📝 Exam mode · +4/−1";
+    buildLegend(); buildPalette(); renderQ(); startTimer();
+    window.scrollTo(0,0);
+  }
+  function startTimer(){ if(timerInt) clearInterval(timerInt); renderTimer(); timerInt=setInterval(onTick,1000); }
+  function onTick(){
+    if(!isPaused() && !state.submitted){
+      state.remaining=Math.max(0,state.remaining-1);
+      if(state.remaining%5===0) save();
+    }
+    renderTimer();
+    if(state.remaining<=0){ clearInterval(timerInt); doSubmit(true); }
+  }
+  function renderTimer(){
+    var rem=state.remaining, m=Math.floor(rem/60), s=rem%60;
+    var paused=isPaused();
+    timerEl.innerHTML=(paused?'<span class="pz">⏸ paused</span> ':'')+((m<10?"0":"")+m+":"+(s<10?"0":"")+s);
+    timerEl.classList.toggle("warn",rem<=300 && !paused);
+    timerEl.classList.toggle("paused",paused);
+  }
+
+  function renderQ(){
+    var i=state.cur, q=Q[i];
+    var picked=state.answers[q.id||i];
+    var reveal=isStudy() && isChecked(q.id||i);
+    var dname=DOMAIN_NAMES[q.domain]||"General";
+    var html='<div class="qmeta">'+
+      '<span class="qnum">Question '+(i+1)+' / '+Q.length+'</span>'+
+      '<span class="badge d'+(q.domain||1)+'">'+esc(shortDomain(q.domain))+'</span>'+
+      (q.difficulty?'<span class="badge diff">'+esc(q.difficulty)+'</span>':'')+
+      '</div>'+
+      (q.scenario?'<div style="margin-bottom:10px"><span class="badge sc">'+esc(q.scenario)+'</span> <span class="tag">'+esc(dname)+'</span></div>':'')+
+      '<div class="stem">'+esc(q.stem)+'</div><div class="opts">';
+    for(var k=0;k<q.options.length;k++){
+      var cls="opt", mk="";
+      if(reveal){
+        cls+=" locked";
+        if(k===q.answer){ cls+=" correct"; mk='<span class="mk g">✓ +4</span>'; }
+        else if(k===picked){ cls+=" wrong"; mk='<span class="mk r">✗ −1 · your answer</span>'; }
+      } else if(picked===k){ cls+=" sel"; }
+      html+='<div class="'+cls+'" data-k="'+k+'">'+
+        '<span class="key">'+LETTERS(k)+'</span><span class="txt">'+esc(q.options[k])+mk+'</span></div>';
+    }
+    html+='</div>';
+    if(reveal){
+      var ok=picked===q.answer;
+      html+='<div class="fb '+(ok?"ok":"no")+'">'+(ok?"✓ Correct · +4":"✗ Wrong · −1 — correct answer is "+LETTERS(q.answer))+'</div>'+
+        (q.explanation?'<div class="expl"><b>Solution ('+LETTERS(q.answer)+').</b> '+esc(q.explanation)+'</div>':'');
+    }
+    qcard.innerHTML=html;
+    if(!reveal){
+      Array.prototype.forEach.call(qcard.querySelectorAll(".opt"),function(o){
+        o.onclick=function(){ pick(parseInt(o.getAttribute("data-k"),10)); };
+      });
+    }
+    var qid=q.id||i;
+    el("flagBtn").classList.toggle("on",!!state.flags[qid]);
+    el("prevBtn").disabled=i===0;
+    var nb=el("nextBtn");
+    if(isStudy() && picked!==undefined && !isChecked(qid)){
+      nb.textContent="Check answer"; nb.setAttribute("data-act","check"); nb.classList.add("primary"); nb.disabled=false;
+    } else {
+      nb.textContent=(i===Q.length-1)?"Review →":"Next →"; nb.setAttribute("data-act","next"); nb.classList.remove("primary"); nb.disabled=(i===Q.length-1);
+    }
+    el("submitBtn").classList.toggle("hide",i!==Q.length-1);
+    updateProgress(); refreshPalette(); renderTimer();
+  }
+  function qidOf(idx){ var q=Q[idx]; return q.id||idx; }
+  function pick(k){
+    var q=Q[state.cur], qid=q.id||state.cur;
+    if(isStudy() && isChecked(qid)) return;
+    state.answers[qid]=k; save();
+    if(isStudy()){ renderQ(); }
+    else {
+      Array.prototype.forEach.call(qcard.querySelectorAll(".opt"),function(o){ o.classList.toggle("sel",parseInt(o.getAttribute("data-k"),10)===k); });
+      updateProgress(); refreshPalette();
+    }
+  }
+  function updateProgress(){
+    var n=Object.keys(state.answers).length;
+    progBar.style.width=(n/Q.length*100)+"%";
+    var extra="";
+    if(isStudy()){
+      var c=0; Q.forEach(function(q,idx){ var id=q.id||idx; if(isChecked(id) && state.answers[id]===q.answer) c++; });
+      extra=" · "+c+" correct so far";
+    } else {
+      var raw=rawScore();
+      extra=" · raw "+(raw>=0?"+":"")+raw;
+    }
+    answeredCount.textContent=n+" of "+Q.length+" answered"+extra;
+  }
+  function rawScore(){
+    var s=0;
+    Q.forEach(function(q,idx){ var a=state.answers[q.id||idx]; if(a!==undefined){ s += (a===q.answer?4:-1); } });
+    return s;
+  }
+  function buildLegend(){
+    var h='<span><i class="sw a"></i> Answered</span>';
+    if(isStudy()) h='<span><i class="sw g"></i> Correct (+4)</span><span><i class="sw r"></i> Wrong (−1)</span><span><i class="sw a"></i> Not checked yet</span>';
+    h+='<span><i class="sw f"></i> Flagged</span><span><i class="sw"></i> Skipped (0)</span>';
+    el("legend").innerHTML=h;
+  }
+  function buildPalette(){
+    var h="";
+    for(var i=0;i<Q.length;i++) h+='<button class="cell" data-i="'+i+'">'+(i+1)+'</button>';
+    palette.innerHTML=h;
+    Array.prototype.forEach.call(palette.querySelectorAll(".cell"),function(c){
+      c.onclick=function(){ state.cur=parseInt(c.getAttribute("data-i"),10); save(); renderQ(); scrollToQ(); };
+    });
+  }
+  function refreshPalette(){
+    Array.prototype.forEach.call(palette.querySelectorAll(".cell"),function(c){
+      var i=parseInt(c.getAttribute("data-i"),10), q=Q[i], a=state.answers[q.id||i];
+      c.classList.remove("answered","ok","no");
+      if(a!==undefined){
+        if(isStudy() && isChecked(q.id||i)) c.classList.add(a===q.answer?"ok":"no");
+        else c.classList.add("answered");
+      }
+      c.classList.toggle("flag",!!state.flags[q.id||i]);
+      c.classList.toggle("current",i===state.cur);
+    });
+  }
+  // FIX for "scroll after every question": pin the new question under the sticky
+  // topbar on every navigation, so the viewport never sits at the bottom.
+  function scrollToQ(){
+    var tb=document.querySelector(".topbar");
+    var off=(tb?tb.offsetHeight:0)+10;
+    var y=qcard.getBoundingClientRect().top+window.pageYOffset-off;
+    window.scrollTo({top:y<0?0:y,behavior:"smooth"});
+  }
+  el("prevBtn").onclick=function(){ if(state.cur>0){state.cur--;save();renderQ();scrollToQ();} };
+  el("nextBtn").onclick=function(){
+    if(this.getAttribute("data-act")==="check"){ var q=Q[state.cur]; state.checked[q.id||state.cur]=true; save(); renderQ(); scrollToQ(); }
+    else if(state.cur<Q.length-1){ state.cur++; save(); renderQ(); scrollToQ(); }
+  };
+  el("flagBtn").onclick=function(){ var id=qidOf(state.cur); state.flags[id]=!state.flags[id]; save(); el("flagBtn").classList.toggle("on",!!state.flags[id]); refreshPalette(); };
+  el("submitBtn").onclick=function(){ doSubmit(false); };
+
+  function doSubmit(auto){
+    var unanswered=Q.length-Object.keys(state.answers).length;
+    if(!auto && unanswered>0){
+      if(!confirm(unanswered+" question(s) skipped (0 marks). Submit anyway?")) return;
+    }
+    if(auto) alert("Time is up — your exam has been submitted automatically.");
+    state.submitted=true; state.usedSec=D.timeLimitSec-state.remaining; save();
+    if(timerInt) clearInterval(timerInt);
+    showResults();
+  }
+
+  document.addEventListener("keydown",function(e){
+    if(examScreen.classList.contains("hide")) return;
+    var k=(e.key||"").toLowerCase();
+    var q=Q[state.cur], n=q.options.length;
+    var li="abcdefghijklmnopqrstuvwxyz".indexOf(k);
+    if(li>=0&&li<n){ pick(li); return; }
+    var num=parseInt(k,10);
+    if(num>=1&&num<=n){ pick(num-1); return; }
+    if(e.key==="ArrowLeft"){ el("prevBtn").click(); }
+    else if(e.key==="ArrowRight"){ el("nextBtn").click(); }
+    else if(e.key==="Enter"){ var nb=el("nextBtn"); if(nb.getAttribute("data-act")==="check"){ e.preventDefault(); nb.click(); } }
+    else if(k==="f"){ el("flagBtn").click(); }
+  });
+
+  // ---------- IPMAT results ----------
+  function showResults(){
+    startScreen.classList.add("hide"); examScreen.classList.add("hide"); resultScreen.classList.remove("hide");
+    progWrap.classList.add("hide"); timerEl.classList.add("hide"); el("modeTag").classList.add("hide");
+    if(timerInt) clearInterval(timerInt);
+    var correct=0, wrong=0, skipped=0;
+    var byTopic={}, byDiff={};
+    Q.forEach(function(q,idx){
+      var id=q.id||idx, a=state.answers[id];
+      var t=q.scenario||"General", d=q.difficulty||"Untagged";
+      byTopic[t]=byTopic[t]||{c:0,w:0,s:0,t:0}; byTopic[t].t++;
+      byDiff[d]=byDiff[d]||{c:0,w:0,s:0,t:0}; byDiff[d].t++;
+      if(a===undefined){ skipped++; byTopic[t].s++; byDiff[d].s++; }
+      else if(a===q.answer){ correct++; byTopic[t].c++; byDiff[d].c++; }
+      else { wrong++; byTopic[t].w++; byDiff[d].w++; }
+    });
+    var total=Q.length, attempted=correct+wrong;
+    var raw=4*correct-1*wrong, max=4*total;
+    var acc=attempted?Math.round(correct/attempted*100):0;
+    var pctMax=max?Math.round(raw/max*100):0;
+
+    el("rawScore").textContent=(raw>=0?"+":"")+raw;
+    el("rawScore").style.color=raw>=0?"var(--good)":"var(--bad)";
+    el("rawMax").textContent="/ "+max+" max";
+    el("scoreDetail").innerHTML="<b>"+correct+" / "+total+"</b> correct · "+wrong+" wrong · "+skipped+" skipped · accuracy <b>"+acc+"%</b> ("+correct+"/"+attempted+" attempted)";
+    if(state.usedSec!==undefined){
+      var used=state.usedSec;
+      el("timeDetail").textContent="Active time: "+Math.floor(used/60)+"m "+(used%60)+"s of "+Math.round(D.timeLimitSec/60)+"m"+(isStudy()?" (paused during solutions)":"");
+    }
+    var tag=pctMax>=60?"Strong — keep pushing for 99+ percentile":(pctMax>=40?"Decent base — fix weak topics below":"Needs work — redo flagged topics in Study mode");
+    el("verdictBox").innerHTML='<div class="muted" style="font-size:12px">% of max: <b>'+pctMax+'%</b></div><div style="font-weight:800;margin-top:4px">'+esc(tag)+'</div>';
+
+    var stats=[
+      [correct,"Correct (+4 each)",""],
+      [wrong,"Wrong (−1 each)",wrong?"bad":""],
+      [skipped,"Skipped (0)",""],
+      [attempted+"/"+total,"Attempted",""],
+      [acc+"%","Accuracy",acc>=70?"good":(acc>=50?"warn":"bad")],
+      [(raw>=0?"+":"")+raw,"Net score",raw>=0?"good":"bad"]
+    ];
+    el("statGrid").innerHTML=stats.map(function(s){return '<div class="stat '+s[2]+'"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>';}).join("");
+
+    el("topicBars").innerHTML=barsHTML(byTopic,true);
+    el("diffBars").innerHTML=barsHTML(byDiff,false);
+    renderReview("all");
+    window.scrollTo(0,0);
+  }
+  function barsHTML(map,isTopic){
+    var keys=Object.keys(map).sort();
+    if(!keys.length) return '<div class="muted">No data.</div>';
+    return keys.map(function(k){
+      var o=map[k], raw=4*o.c-1*o.w, max=4*o.t;
+      var p=max?Math.max(0,Math.round(raw/max*100)):0;
+      var col=p>=60?"var(--good)":(p>=40?"var(--warn)":"var(--bad)");
+      return '<div class="dbar"><div class="lab"><span><b>'+esc(k)+'</b></span><span class="muted">'+o.c+'✓ '+o.w+'✗ '+o.s+'○ · '+(raw>=0?"+":"")+raw+'/'+max+'</span></div>'+
+        '<div class="track"><i style="width:'+p+'%;background:'+col+'"></i></div></div>';
+    }).join("");
+  }
+  var curFilter="all";
+  Array.prototype.forEach.call(document.querySelectorAll(".filterbtn"),function(b){
+    b.onclick=function(){ Array.prototype.forEach.call(document.querySelectorAll(".filterbtn"),function(x){x.classList.remove("on");}); b.classList.add("on"); curFilter=b.getAttribute("data-f"); renderReview(curFilter); };
+  });
+  function renderReview(filter){
+    var list=el("reviewList"); list.innerHTML="";
+    Q.forEach(function(q,idx){
+      var id=q.id||idx, picked=state.answers[id], isCorrect=picked===q.answer;
+      if(filter==="incorrect" && isCorrect) return;
+      if(filter==="flagged" && !state.flags[id]) return;
+      var opts="";
+      for(var k=0;k<q.options.length;k++){
+        var cls="opt locked"; if(k===q.answer) cls+=" correct"; else if(k===picked) cls+=" wrong";
+        var tagtxt=""; if(k===q.answer) tagtxt='<span class="mk g">✓ +4</span>'; else if(k===picked) tagtxt='<span class="mk r">✗ −1 · your answer</span>';
+        opts+='<div class="'+cls+'"><span class="key">'+LETTERS(k)+'</span><span class="txt">'+esc(q.options[k])+tagtxt+'</span></div>';
+      }
+      var mark = isCorrect?'<span class="pill pass" style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--good-soft);color:var(--good)">Correct +4</span>':(picked===undefined?'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--panel-2);color:var(--ink-soft)">Skipped · 0</span>':'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--bad-soft);color:var(--bad)">Wrong −1</span>');
+      list.innerHTML+='<div class="card rev">'+
+        '<div class="qmeta"><span class="qnum">Q'+(idx+1)+'</span><span class="badge d'+(q.domain||1)+'">'+esc(shortDomain(q.domain))+'</span>'+(q.difficulty?'<span class="badge diff">'+esc(q.difficulty)+'</span>':'')+(state.flags[id]?'<span class="badge d3">⚑ flagged</span>':'')+'<div class="spacer"></div>'+mark+'</div>'+
+        (q.scenario?'<div style="margin:2px 0 8px"><span class="badge sc">'+esc(q.scenario)+'</span></div>':'')+
+        '<div class="rq">'+esc(q.stem)+'</div><div class="opts">'+opts+'</div>'+
+        (q.explanation?'<div class="expl"><b>Solution ('+LETTERS(q.answer)+').</b> '+esc(q.explanation)+'</div>':'')+'</div>';
+    });
+    if(!list.innerHTML) list.innerHTML='<div class="card rev muted">Nothing to show for this filter.</div>';
+  }
+  el("retakeBtn").onclick=function(){ if(confirm("Start a fresh attempt? Your current answers will be cleared.")){ reset(); location.reload(); } };
+  el("backBtn").onclick=function(){ resultScreen.classList.add("hide"); startScreen.classList.remove("hide"); window.scrollTo(0,0); };
+})();
+</script>
+</body>
+</html>

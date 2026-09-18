@@ -111,7 +111,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <h3 id="g-papers">Papers tab — paper manager</h3>
     <p class="hint">Every published paper as a card: <b>Breakdown</b> shows difficulty bars, section/topic/subtopic splits, answer balance, schema + bank integrity, and expected-vs-actual rows when a blueprint shares the paper's ID. <b>Unpublish</b> drops the runner listing only (files stay — the paper shows as an orphan and can be re-published). <b>Delete</b> removes the listing and both files after a double confirm. Dashboard rows link here via <b>details →</b>.</p>
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
-    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> makes max 2 API calls with a visible progress bar + elapsed timer (button locks against double-clicks), then parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped, saved qids listed). Nothing invalid is ever saved. On <b>429/503 strain</b> you get the call count, a wait hint (~Xs cooldown) and a Retry button — 1 retry = 1–2 calls. Prefer <code>gemini-2.5-flash</code> (invalid/rare model names drive the AI-Studio failure rate up).</p>
+    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> makes max 2 API calls with a visible progress bar + elapsed timer (button locks against double-clicks), then parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped, saved qids listed). Nothing invalid is ever saved. On <b>429/503 strain</b> you get the call count, a wait hint (~Xs cooldown) and a Retry button — 1 retry = 1–2 calls. A <b>404</b> means the model name is retired for your key (e.g. <code>gemini-2.5-flash</code>) — press <b>Refresh available models</b> and <b>Use</b> a listed one (<code>gemini-3.5-flash-lite</code> primary, <code>gemini-3.8-flash</code> fallback).</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
     <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p>
     <h3 id="g-students">Students tab — registered accounts</h3>
@@ -182,7 +182,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-llm">
   <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>
-    <p class="hint"><b>Generate</b> sends ONE section batch prompt (from <code>prompts/</code>) to your chosen provider — 1 click = max 2 API calls, then it stops and shows a manual <b>Retry</b>. You'll always see progress (preparing → sending → waiting Ns → done/failed with call count + seconds). Tick <b>save valid to bank</b> to append passing questions (duplicates skipped) — saved qids are listed and visible via Questions → Filter. Only schema-valid questions are ever saved. Requires <code>enabled:true</code> in <code>app/llm.config.json</code> plus, per provider: <b>OpenAI-compatible</b> → endpoint + model + API key; <b>Gemini</b> → model + API key only. Use stable <code>gemini-2.5-flash</code> (rare/newer names fail more and burn quota). On 429/503 the server honors the provider's retry hint, then enforces a short cooldown — wait, then Retry, don't double-click.</p>
+    <p class="hint"><b>Generate</b> sends ONE section batch prompt (from <code>prompts/</code>) to your chosen provider — 1 click = max 2 API calls, then it stops and shows a manual <b>Retry</b>. You'll always see progress (preparing → sending → waiting Ns → done/failed with call count + seconds). Tick <b>save valid to bank</b> to append passing questions (duplicates skipped) — saved qids are listed and visible via Questions → Filter. Only schema-valid questions are ever saved. Requires <code>enabled:true</code> in <code>app/llm.config.json</code> plus, per provider: <b>OpenAI-compatible</b> → endpoint + model + API key; <b>Gemini</b> → model + API key only. Use <code>gemini-3.5-flash-lite</code> (current, cheapest) or <code>gemini-3.8-flash</code> — <code>gemini-2.5-flash</code> and older are deprecated and 404. <b>Refresh available models</b> lists exactly what your key supports (free); <b>Use selected model</b> saves it locally.</p>
     <div id="llmStat"></div>
     <div class="row">
       <label title="Which configured provider to call. Missing keys are flagged above.">Provider <span class="q">?</span> <select id="lProv"><option value="openai">OpenAI-compatible</option><option value="gemini">Gemini</option></select></label>
@@ -193,6 +193,12 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <label><input type="checkbox" id="lSave"> save valid to bank</label>
       <button class="ghost btn" onclick="llmPreview()" title="Show the exact system + user prompts that will be sent — no LLM call is made.">Preview exact prompt</button>
       <button class="btn" id="lGenBtn" onclick="llmGen()">Generate</button>
+    </div>
+    <div class="row">
+      <button class="ghost btn" onclick="llmModels()" title="List models your Gemini key actually supports (free, no generation quota) — stops 404s from guessing retired names.">Refresh available models</button>
+      <label title="Only models your key supports for generateContent. Pick one, then Use it.">Model <span class="q">?</span> <select id="lModel"><option value="">— press Refresh —</option></select></label>
+      <button class="ghost btn" onclick="llmUseModel()" title="Save the selected model into local app/llm.config.json (key untouched).">Use selected model</button>
+      <span id="lModelMsg" class="muted"></span>
     </div>
     <div id="llmProg" style="margin:8px 0"></div>
     <details id="lPromptBox" style="margin:8px 0"><summary class="muted">Exact prompts sent to the LLM (system + user) — click to expand</summary><div id="lPrompt"></div></details>
@@ -410,6 +416,17 @@ function llmParams(){return new URLSearchParams({section:$("lSec").value,count:$
 async function llmPreview(){const{st,j}=await api("GET","/api/llm/prompt?"+llmParams());
   $("lPromptBox").open=true;
   $("lPrompt").innerHTML=st===200?`<h3>System prompt <span class="muted">(prompts/generator-system.md)</span></h3><pre>${j.system.replace(/</g,"&lt;")}</pre><h3>User prompt <span class="muted">(prompts/${$("lSec").value}-batch.md, [N]/[DIFFICULTY]/[TOPIC-MIX] substituted)</span></h3><pre>${j.user.replace(/</g,"&lt;")}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;}
+async function llmModels(){const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  $("lModelMsg").textContent="listing…";
+  const{st,j}=await api("GET","/api/llm/models");
+  if(st!==200||!j.ok){$("lModelMsg").innerHTML=`<span class="err">${((j||{}).errors||["failed"]).map(esc).join("; ")}</span>`;return;}
+  const gens=(j.models||[]).filter(m=>m.generate);
+  $("lModel").innerHTML=gens.map(m=>`<option value="${esc(m.name)}"${m.name===j.configured?" selected":""}>${esc(m.name)}${m.name===j.configured?" (current)":""}</option>`).join("")||'<option value="">— none support generateContent —</option>';
+  $("lModelMsg").innerHTML=`<span class="ok">${gens.length} usable model(s)</span> <span class="muted">current: ${esc(j.configured||"—")} · ${(j.models||[]).length-gens.length} non-generation skipped</span>`;}
+async function llmUseModel(){const m=$("lModel").value;if(!m){$("lModelMsg").innerHTML='<span class="err">pick a model first (Refresh if empty)</span>';return;}
+  const{st,j}=await api("POST","/api/llm/model",{model:m});
+  $("lModelMsg").innerHTML=st===200?`<span class="ok">now using ${m}</span>`:`<span class="err">${((j||{}).errors||["failed"]).join("; ")}</span>`;
+  if(st===200)llmStat();}
 let llmBusy=false,llmCooldownUntil=0;
 async function llmGen(){
   if(llmBusy)return;

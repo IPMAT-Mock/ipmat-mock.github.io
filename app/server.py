@@ -938,6 +938,57 @@ def llm_status():
     return jsonify(out)
 
 
+@app.get("/api/llm/models")
+def llm_models():
+    """List models usable by the configured Gemini key (read-only, no quota).
+
+    Proxies Gemini ListModels so the admin UI can offer only model names
+    this key actually supports — guessing names (e.g. a deprecated
+    gemini-2.5-flash) is what produces 404s that pollute AI-Studio stats.
+    """
+    import requests
+    cfg = _llm_config()
+    pconf = (cfg.get("providers") or {}).get("gemini") or {}
+    if not (pconf.get("api_key") or "").strip():
+        return jsonify({"ok": False,
+                        "errors": ["no api_key set for 'gemini' in app/llm.config.json"]}), 422
+    try:
+        r = requests.get(
+            "https://generativelanguage.googleapis.com/v1beta/models",
+            headers={"x-goog-api-key": pconf.get("api_key", "")},
+            params={"pageSize": 100}, timeout=30)
+    except Exception as e:
+        return jsonify({"ok": False, "errors": [f"ListModels failed: {e}"]}), 502
+    if r.status_code != 200:
+        return jsonify({"ok": False,
+                        "errors": [f"ListModels failed: {r.status_code} {_provider_error(r)}"]}), 502
+    models = []
+    for m in ((r.json() or {}).get("models") or []):
+        methods = m.get("supportedGenerationMethods") or []
+        models.append({"name": (m.get("name") or "").removeprefix("models/"),
+                       "display": m.get("displayName", ""),
+                       "generate": "generateContent" in methods})
+    return jsonify({"ok": True, "models": models,
+                    "configured": (pconf.get("model") or "")})
+
+
+@app.post("/api/llm/model")
+def llm_set_model():
+    """Set the Gemini model in the local git-ignored config (no key touch)."""
+    body = request.get_json(force=True) or {}
+    model = (body.get("model") or "").strip()
+    if not model:
+        return jsonify({"ok": False, "errors": ["model name required"]}), 422
+    raw = _read_json(LLM_CONFIG_PATH, {})
+    raw = _normalize_llm_config(raw)
+    raw["providers"]["gemini"]["model"] = model
+    try:
+        LLM_CONFIG_PATH.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+    except Exception as e:
+        return jsonify({"ok": False, "errors": [f"could not write config: {e}"]}), 500
+    return jsonify({"ok": True, "model": model})
+
+
 def _openai_request(pconf, system, user):
     """(url, headers, body) for an OpenAI-compatible chat-completions call."""
     return (pconf["base_url"].rstrip("/") + "/chat/completions",

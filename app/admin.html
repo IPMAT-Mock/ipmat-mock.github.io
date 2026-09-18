@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="guide">Guide</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -58,6 +58,30 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <p class="muted">Paste one v2 question JSON. <button class="ghost btn" onclick="fillTemplate()">Insert template</button></p>
     <textarea id="newQ" rows="12" placeholder='{"qid": "...", ...}'></textarea>
     <div class="row"><button class="btn" onclick="addQ()">Validate &amp; append to bank</button><span id="addMsg"></span></div></div>
+</section>
+<section class="tab" id="t-guide">
+  <div class="card"><h2>How papers are made — no AI needed</h2>
+    <p class="hint">Paper generation is <b>deterministic curation</b> from your validated question bank. The LLM tab is purely an <em>optional authoring aid</em> for writing new questions — assembly itself never calls any AI.</p>
+    <h3>The 5-step pipeline</h3>
+    <table><tr><th>#</th><th>Step</th><th>What happens</th><th>Where</th></tr>
+    <tr><td>①</td><td><b>Bank</b> (raw material)</td><td>77 curated v2 questions live in JSONL files, each tagged with section, topic bucket, difficulty, options, answer, hint and solution.</td><td><code>bank/*.jsonl</code> · Questions tab</td></tr>
+    <tr><td>②</td><td><b>Spec</b> (recipe)</td><td>You pick a saved blueprint (section counts + topic mix + difficulty split) or build a custom spec (counts, single-topic-or-mix, difficulties, seed).</td><td><code>blueprints/*.yaml</code> · New paper tab → <code>POST /api/assemble</code></td></tr>
+    <tr><td>③</td><td><b>Assemble</b></td><td>Seeded shuffle picks exact per-bucket counts (fails with need/have numbers if the bank is short), then auto-repairs difficulty via same-bucket swaps and balances answer positions ~25% each.</td><td><code>scripts/banklib.py:assemble</code></td></tr>
+    <tr><td>④</td><td><b>Preview</b> (nothing saved)</td><td>You see the achieved mix, difficulty counts and warnings — or a plain-English "bank short" error naming the topic that needs more questions.</td><td>Preview pane in New paper tab</td></tr>
+    <tr><td>⑤</td><td><b>Publish</b></td><td>Re-validates (schema + marking + counts/mix/difficulty) and writes the paper to <code>papers/</code> + <code>public/papers/</code>, updating the runner manifest.</td><td><code>POST /api/papers/publish</code></td></tr></table>
+    <h3>Worked example — a 5-question Arithmetic drill</h3>
+    <p class="hint">New paper tab → Exam kind <b>Practice</b> → Source <b>Custom spec</b> → one section row: <b>QA</b>, count <b>5</b>, mode <b>single topic</b>, topic <b>Arithmetic</b> → <b>Assemble</b> (preview shows 5 × Arithmetic) → <b>Publish</b> → <b>Open in runner</b>. Takes under a minute.</p>
+    <h3>Field glossary</h3>
+    <table><tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td>Exam kind</td><td><b>Mock</b> = standard timed paper · <b>Simulation</b> = exam-day strict (no hints/pauses, solutions locked till submit) · <b>Practice</b> = short set, e.g. drills.</td></tr>
+    <tr><td>Seed</td><td>Random draw control: <b>same bank + same seed = same paper</b>. Change it for a fresh selection.</td></tr>
+    <tr><td>Section mix vs single topic</td><td><b>Mix</b> auto-splits across the section's taxonomy buckets · <b>Single topic</b> takes all questions from one bucket (drills).</td></tr>
+    <tr><td>Difficulties</td><td>Restricts the pool before picking. Unticking a level can cause "bank short" if too little remains.</td></tr></table>
+    <h3>When it fails — recovery</h3>
+    <table><tr><th>Message</th><th>Fix</th></tr>
+    <tr><td><code>bank short for QA/Arithmetic: need 20, have 13</code></td><td>Add questions (Questions tab or LLM tab), lower the count, or switch to section mix.</td></tr>
+    <tr><td><code>difficulty Easy: want 20, got 19 (warning)</code></td><td>Bank spread is thin for that bucket — preview still usable; add Easy questions of that topic to silence it.</td></tr>
+    <tr><td>Validation error on publish</td><td>Read the listed line: schema breach (fix the question), marking drift, duplicate qid, or count mismatch.</td></tr></table></div>
 </section>
 <section class="tab" id="t-topics">
   <div class="card"><h2>Topic taxonomy <span class="muted">config/topics.json — single source of truth</span></h2>
@@ -89,7 +113,9 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <label>Difficulties <span id="wDiffs"><label><input type="checkbox" value="Easy" checked> Easy</label> <label><input type="checkbox" value="Medium" checked> Medium</label> <label><input type="checkbox" value="Hard" checked> Hard</label></span></label></div>
     </div>
     <div class="row"><button class="btn" onclick="assemble()">Assemble (preview)</button><span id="asmMsg"></span></div>
-    <div id="asmOut"></div></div>
+    <div id="asmOut"></div>
+    <details style="margin-top:10px"><summary class="muted">How is this paper made without AI? (quick recap — full version in the Guide tab)</summary>
+    <p class="hint" style="margin-top:8px">Your spec picks questions from the <b>bank</b> (<code>bank/*.jsonl</code>) by <b>seeded shuffle</b>: exact per-topic counts, difficulty auto-repair, answers balanced ~25% each. <b>Same bank + same seed = same paper.</b> Preview saves nothing; <b>Publish</b> validates and ships to the runner. The LLM only ever <em>writes new questions</em> — it is never involved in building papers. See the <b>Guide</b> tab for the full pipeline, a worked drill example and failure recovery.</p></details></div>
 </section>
 <section class="tab" id="t-llm">
   <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>

@@ -5,12 +5,15 @@ Serves the admin UI at / and JSON APIs under /api/*.
 """
 import json
 import pathlib
+import re
 import sys
+from datetime import datetime, timezone
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "scripts"))
 import banklib  # noqa: E402
 
 from flask import Flask, jsonify, request, send_from_directory  # noqa: E402
+from werkzeug.security import check_password_hash, generate_password_hash  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APP_DIR = ROOT / "app"
@@ -19,6 +22,7 @@ PAPERS_DIR = ROOT / "papers"
 PUBLIC_PAPERS = ROOT / "public" / "papers"
 CONFIG_PATH = ROOT / "config" / "exam.config.json"
 LLM_CONFIG_PATH = APP_DIR / "llm.config.json"
+STUDENTS_PATH = ROOT / "data" / "students.json"
 
 QSCHEMA = json.loads((ROOT / "schemas" / "question.schema.json").read_text(encoding="utf-8"))
 
@@ -578,6 +582,132 @@ def config_save():
         return jsonify({"ok": False, "errors": ["marking must stay +3/-1/0"]}), 422
     _write_json(CONFIG_PATH, body)
     return jsonify({"ok": True})
+
+
+# ---------------- students (public signup + admin manager) ----------------
+
+EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+
+
+def _load_students():
+    data = _read_json(STUDENTS_PATH, {"students": []})
+    if not isinstance(data, dict) or not isinstance(data.get("students"), list):
+        return {"students": []}
+    return data
+
+
+def _save_students(data):
+    _write_json(STUDENTS_PATH, data)
+
+
+def _public_student(s):
+    return {"id": s.get("id"), "first_name": s.get("first_name"),
+            "last_name": s.get("last_name"), "email": s.get("email"),
+            "mobile": s.get("mobile"), "created_at": s.get("created_at")}
+
+
+def _norm_mobile(raw):
+    """Accept 10-digit Indian mobiles, tolerating +91/91/0 prefixes and separators."""
+    d = re.sub(r"\D", "", str(raw or ""))
+    if len(d) == 12 and d.startswith("91"):
+        d = d[2:]
+    elif len(d) == 11 and d.startswith("0"):
+        d = d[1:]
+    return d if re.fullmatch(r"[6-9]\d{9}", d or "") else None
+
+
+def _validate_signup(body):
+    errors = []
+    first = (body.get("first_name") or "").strip()
+    last = (body.get("last_name") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+    mobile = _norm_mobile(body.get("mobile"))
+    password = body.get("password") or ""
+    if not first or len(first) > 50:
+        errors.append("first_name is required (max 50 chars)")
+    if not last or len(last) > 50:
+        errors.append("last_name is required (max 50 chars)")
+    if not EMAIL_RE.match(email or ""):
+        errors.append("a valid email-id is required")
+    if not mobile:
+        errors.append("a valid 10-digit mobile number is required")
+    if len(password) < 8:
+        errors.append("password must be at least 8 characters")
+    if body.get("accepted_tc") is not True:
+        errors.append("terms & conditions must be accepted")
+    return errors, {"first_name": first, "last_name": last,
+                    "email": email, "mobile": mobile, "password": password}
+
+
+@app.post("/api/students/signup")
+def student_signup():
+    """Public signup (used by public/signup.html). Email unique, password hashed."""
+    body = request.get_json(force=True) or {}
+    errors, clean = _validate_signup(body)
+    if errors:
+        return jsonify({"ok": False, "errors": errors}), 422
+    data = _load_students()
+    if any(s.get("email") == clean["email"] for s in data["students"]):
+        return jsonify({"ok": False, "errors": [f"email-id '{clean['email']}' is already registered"]}), 409
+    nums = [int(s["id"].split("-", 1)[1]) for s in data["students"]
+            if str(s.get("id", "")).startswith("STU-") and str(s.get("id", ""))[4:].isdigit()]
+    sid = f"STU-{(max(nums) + 1) if nums else 1:04d}"
+    data["students"].append({
+        "id": sid, "first_name": clean["first_name"], "last_name": clean["last_name"],
+        "email": clean["email"], "mobile": clean["mobile"],
+        "password_hash": generate_password_hash(clean["password"]),
+        "accepted_tc": True,
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    })
+    _save_students(data)
+    return jsonify({"ok": True, "id": sid,
+                    "name": f"{clean['first_name']} {clean['last_name']}"}), 201
+
+
+@app.post("/api/students/signin")
+def student_signin():
+    """Public signin: verify email + password. Generic 401 to avoid account enumeration."""
+    body = request.get_json(force=True) or {}
+    email = (body.get("email") or "").strip().lower()
+    password = body.get("password") or ""
+    if not email or not password:
+        return jsonify({"ok": False, "errors": ["email-id and password are required"]}), 422
+    for s in _load_students()["students"]:
+        if s.get("email") == email and check_password_hash(s.get("password_hash") or "", password):
+            return jsonify({"ok": True, "id": s.get("id"),
+                            "name": f"{s.get('first_name')} {s.get('last_name')}"})
+    return jsonify({"ok": False, "errors": ["invalid email-id or password"]}), 401
+
+
+@app.get("/api/students")
+def students_list():
+    """Admin: list students (password hashes never leave the server)."""
+    return jsonify({"students": [_public_student(s) for s in _load_students()["students"]]})
+
+
+@app.delete("/api/students/<sid>")
+def student_delete(sid):
+    data = _load_students()
+    kept = [s for s in data["students"] if s.get("id") != sid]
+    if len(kept) == len(data["students"]):
+        return jsonify({"ok": False, "errors": [f"unknown student '{sid}'"]}), 404
+    data["students"] = kept
+    _save_students(data)
+    return jsonify({"ok": True, "id": sid})
+
+
+@app.post("/api/students/<sid>/reset-password")
+def student_reset_password(sid):
+    body = request.get_json(force=True) or {}
+    if len(body.get("password") or "") < 8:
+        return jsonify({"ok": False, "errors": ["password must be at least 8 characters"]}), 422
+    data = _load_students()
+    for s in data["students"]:
+        if s.get("id") == sid:
+            s["password_hash"] = generate_password_hash(body["password"])
+            _save_students(data)
+            return jsonify({"ok": True, "id": sid})
+    return jsonify({"ok": False, "errors": [f"unknown student '{sid}'"]}), 404
 
 
 # ---------------- LLM loop (opt-in) ----------------

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPMAT Mock Tests — IIMB Pattern Practice</title>
+<meta name="description" content="Free IPMAT mock tests on the exact IIMB pattern: 60 questions, 135 minutes, +3/−1 marking.">
+<style>
+:root{--ink:#0f1e3c;--mut:#5b6b8c;--brand:#1d4ed8;--brand2:#7c3aed;--bg:#f4f6fb;--card:#fff;--line:#e2e8f0}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:16px;padding:12px 20px}
+.logo{font-weight:800;font-size:18px;text-decoration:none;color:var(--ink)}
+.logo span{background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+nav .sp{flex:1}
+.btn{display:inline-block;text-decoration:none;font-weight:700;border-radius:10px;padding:11px 22px;font-size:15px}
+.btn-pri{background:linear-gradient(90deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 4px 14px rgba(29,78,216,.35)}
+.btn-ghost{border:1px solid var(--line);color:var(--ink);background:#fff}
+.hero{background:radial-gradient(1000px 400px at 20% -10%,#dbeafe 0,transparent 60%),radial-gradient(900px 380px at 90% 0,#ede9fe 0,transparent 55%),#fff;border-bottom:1px solid var(--line)}
+.hero .wrap{padding:72px 20px 64px;text-align:center}
+.badge{display:inline-block;background:#eef2ff;color:#3730a3;font-weight:700;font-size:13px;border-radius:999px;padding:6px 14px;margin-bottom:16px}
+h1{font-size:clamp(32px,5vw,54px);margin:0 0 12px;line-height:1.08}
+h1 .grad{background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--mut);font-size:clamp(16px,2.2vw,20px);max-width:640px;margin:0 auto 28px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:36px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 26px;min-width:130px;box-shadow:0 2px 8px rgba(15,30,60,.05)}
+.stat b{font-size:26px;display:block}
+.stat small{color:var(--mut)}
+.pattern{background:var(--ink);color:#fff}
+.pattern .wrap{padding:40px 20px}
+.pattern h2,.modes h2,.steps h2{text-align:center;margin:0 0 6px;font-size:26px}
+.pattern p.sub,.modes p.sub,.steps p.sub{text-align:center;color:#93a1c0;margin:0 0 24px}
+.modes p.sub,.steps p.sub{color:var(--mut)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.pcell{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:16px;text-align:center}
+.pcell b{font-size:24px;display:block}
+.pcell small{color:#93a1c0}
+.modes .wrap,.steps .wrap{padding:56px 20px}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;box-shadow:0 2px 10px rgba(15,30,60,.05)}
+.mcard .ico{font-size:28px}
+.mcard h3{margin:10px 0 6px}
+.mcard p{color:var(--mut);font-size:14px;margin:0 0 14px}
+.mcard a{color:var(--brand);font-weight:700;text-decoration:none}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;counter-reset:step}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;position:relative}
+.scard::before{counter-increment:step;content:counter(step);position:absolute;top:-16px;left:20px;width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+.scard h3{margin:8px 0 6px}
+.scard p{color:var(--mut);font-size:14px;margin:0}
+.scard a{color:var(--brand);font-weight:700;text-decoration:none}
+.final{background:linear-gradient(120deg,#1e1b4b,#1d4ed8 60%,#7c3aed);color:#fff;text-align:center}
+.final .wrap{padding:64px 20px}
+.final h2{margin:0 0 10px;font-size:30px}
+.final p{color:#cdd8f8;margin:0 0 26px}
+.final .btn-ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35);color:#fff}
+footer{border-top:1px solid var(--line);background:#fff}
+footer .wrap{padding:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;color:var(--mut);font-size:13px}
+footer .sp{flex:1}
+footer a{color:var(--brand);text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="/public/landing.html">IPMAT<span>Mock</span></a>
+  <span class="sp"></span>
+  <a href="/public/signin.html">Sign in</a>
+  <a class="btn btn-pri" style="padding:8px 18px" href="/public/signup.html">Sign up free</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="badge">IIMB PATTERN · 60 QUESTIONS · 135 MINUTES</span>
+  <h1>Crack IPMAT with mocks that feel like <span class="grad">the real thing</span></h1>
+  <p class="lead">Timed full-length mocks, sectional drills and mixed practice — built on the exact IIMB exam pattern with +3 / −1 marking.</p>
+  <div class="cta">
+    <a class="btn btn-pri" href="/public/signup.html">Create free account</a>
+    <a class="btn btn-ghost" href="/public/signin.html">Sign in</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="stQ">77</b><small>practice questions</small></div>
+    <div class="stat"><b id="stP">3</b><small>published papers</small></div>
+    <div class="stat"><b>60 : 135</b><small>questions : minutes</small></div>
+  </div>
+</div></header>
+
+<section class="pattern"><div class="wrap">
+  <h2>The exam pattern, baked in</h2>
+  <p class="sub">Every mock follows the IIMB blueprint exactly</p>
+  <div class="pgrid">
+    <div class="pcell"><b>30</b><small>Quantitative Aptitude</small></div>
+    <div class="pcell"><b>15</b><small>Logical Reasoning</small></div>
+    <div class="pcell"><b>15</b><small>Verbal Ability</small></div>
+    <div class="pcell"><b>+3 / −1</b><small>correct / wrong</small></div>
+    <div class="pcell"><b>135 min</b><small>total time</small></div>
+  </div>
+</div></section>
+
+<section class="modes"><div class="wrap">
+  <h2>Three ways to practise</h2>
+  <p class="sub">Pick the mode that matches your prep stage</p>
+  <div class="mgrid">
+    <div class="mcard"><div class="ico">📝</div><h3>Study mode</h3><p>Learn at your own pace with hints and step-by-step solutions after every question.</p><a href="/public/signup.html">Sign up to start →</a></div>
+    <div class="mcard"><div class="ico">⏱️</div><h3>Exam mode</h3><p>Full 135-minute timed simulation with real +3/−1 scoring and a performance review.</p><a href="/public/signup.html">Sign up to start →</a></div>
+    <div class="mcard"><div class="ico">🎯</div><h3>Sectional drills</h3><p>Short QA / LR / VARC practice sets to fix weak topics fast.</p><a href="/public/signup.html">Sign up to start →</a></div>
+  </div>
+</div></section>
+
+<section class="steps"><div class="wrap">
+  <h2>Get started in 3 steps</h2>
+  <p class="sub">Free forever — no card required</p>
+  <div class="sgrid">
+    <div class="scard"><h3>Create your account</h3><p>Sign up with your name, email-id and mobile number in under a minute.</p><p><a href="/public/signup.html">Sign up →</a></p></div>
+    <div class="scard"><h3>Pick a paper</h3><p>Choose a full mock, a sectional drill or a mixed practice set.</p><p><a href="/public/signup.html">Sign up →</a></p></div>
+    <div class="scard"><h3>Review &amp; improve</h3><p>Check solutions, spot weak buckets and drill them next.</p><p><a href="/public/signin.html">Sign in →</a></p></div>
+  </div>
+</div></section>
+
+<section class="final"><div class="wrap">
+  <h2>Your first mock is one click away</h2>
+  <p>Join with a free student account and start practising today.</p>
+  <div class="cta">
+    <a class="btn btn-pri" style="background:#fff;color:var(--brand)" href="/public/signup.html">Sign up free</a>
+    <a class="btn btn-ghost" href="/public/signin.html">I have an account</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>IPMAT Mock — IIMB-pattern practice</span><span class="sp"></span>
+  <a href="/public/signup.html">Sign up</a><a href="/public/signin.html">Sign in</a>
+</div></footer>
+
+<script>
+(async()=>{
+  try{
+    const[h,p]=await Promise.all([
+      fetch("/api/health").then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch("/api/papers").then(r=>r.ok?r.json():null).catch(()=>null)]);
+    if(h&&typeof h.bank_questions==="number")document.getElementById("stQ").textContent=h.bank_questions;
+    if(p&&Array.isArray(p.papers))document.getElementById("stP").textContent=p.papers.length;
+  }catch(_){/* static hosting — keep fallback numbers */}
+})();
+</script>
+</body>
+</html>

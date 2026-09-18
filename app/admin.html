@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="bp">Blueprints</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="bp">Blueprints</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><button data-t="students">Students</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -107,7 +107,9 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
     <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
-    <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p></div>
+    <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p>
+    <h3 id="g-students">Students tab — registered accounts</h3>
+    <p class="hint">Students sign up at <code>public/signup.html</code> (first/last name, unique email-id, 10-digit mobile, 8+ char password, T&amp;C checkbox) and sign in at <code>public/signin.html</code> (verified against the stored hash; wrong credentials get a generic 401). Stored in <code>data/students.json</code> (git-ignored runtime data) with passwords as one-way hashes — hashes are never shown or sent to the browser. Use <b>Search</b> to filter by name/email/mobile, <b>Reset pw</b> to set a new password, <b>Delete</b> to remove an account. Duplicate email-ids are rejected with a 409. Note: signup posts to the Flask backend, so it works when served via the local server (<code>/public/signup.html</code>), not from a static Pages deploy.</p></div>
 </section>
 <section class="tab" id="t-topics">
   <div class="card"><h2>Topic taxonomy <span class="muted">config/topics.json — single source of truth</span></h2>
@@ -190,6 +192,12 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <div class="row"><label>Total time (sec) <input id="cTime" size="8"></label></div>
     <div id="cSecs"></div>
     <div class="row"><button class="btn" onclick="saveCfg()">Save config</button><span id="cfgMsg"></span></div></div>
+</section>
+<section class="tab" id="t-students">
+  <div class="card"><h2>Students <span class="muted">public/signup.html → data/students.json</span></h2>
+    <p class="hint"><b>Search</b> filters by name, email-id or mobile. Passwords are stored hashed and never displayed. <b>Reset pw</b> sets a new password (min 8 chars); <b>Delete</b> removes the account permanently. Signup page: <a href="/public/signup.html" target="_blank">/public/signup.html</a>.</p>
+    <div class="row"><label>Search <input id="sQ" size="30" placeholder="name, email or mobile" oninput="renderStudents()"></label><span id="stuCount" class="muted"></span></div>
+    <div id="students"></div></div>
 </section>
 </main>
 <script>
@@ -394,10 +402,25 @@ async function llmGen(){await llmPreview();
 async function loadCfg(){const{st,j}=await api("GET","/api/config");$("cTime").value=j.time_sec;
   $("cSecs").innerHTML=j.sections.map(s=>`<div class="row"><b>${s.code}</b><label>count <input data-sec="${s.code}" size="4" value="${s.count}"></label></div>`).join("");}
 async function saveCfg(){const body={time_sec:parseInt($("cTime").value||"8100"),marking:{correct:3,wrong:-1,skipped:0},answer_balance_tolerance:2,
-  sections:[...document.querySelectorAll("#cSecs input")].map(i=>({code:i.dataset.sec,count:parseInt(i.value||"0")}))};
-  const{st,j}=await api("POST","/api/config",body);
-  $("cfgMsg").innerHTML=st===200?'<span class="ok">saved</span>':`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;}
-dash();loadBank();loadCfg();loadTopics();pidAuto();
+   sections:[...document.querySelectorAll("#cSecs input")].map(i=>({code:i.dataset.sec,count:parseInt(i.value||"0")}))};
+   const{st,j}=await api("POST","/api/config",body);
+   $("cfgMsg").innerHTML=st===200?'<span class="ok">saved</span>':`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;}
+let STU=[];
+async function loadStudents(){const{st,j}=await api("GET","/api/students");if(st!==200)return;
+  STU=j.students||[];renderStudents();}
+function renderStudents(){const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const q=$("sQ").value.trim().toLowerCase();
+  const rows=STU.filter(s=>!q||`${s.first_name} ${s.last_name} ${s.email} ${s.mobile}`.toLowerCase().includes(q));
+  $("stuCount").textContent=`${STU.length} registered${q?`, ${rows.length} shown`:""}`;
+  $("students").innerHTML=rows.length?`<table><tr><th>ID</th><th>Name</th><th>Email-id</th><th>Mobile</th><th>Signed up</th><th></th></tr>${rows.map(s=>`<tr><td><b>${esc(s.id)}</b></td><td>${esc(s.first_name)} ${esc(s.last_name)}</td><td>${esc(s.email)}</td><td>${esc(s.mobile)}</td><td class="muted">${esc(s.created_at||"—")}</td><td><button class="btn" onclick="resetPw('${s.id}')">Reset pw</button> <button class="ghost btn" onclick="delStudent('${s.id}','${esc(s.email)}')">Delete</button></td></tr>`).join("")}</table>`:'<p class="muted">No students yet — share <a href="/public/signup.html" target="_blank">/public/signup.html</a>.</p>';}
+async function delStudent(id,email){if(!confirm(`Delete student ${email} (${id})? This cannot be undone.`))return;
+  const{st,j}=await api("DELETE",`/api/students/${id}`);
+  if(st!==200)alert((j.errors||["delete failed"]).join("; "));await loadStudents();}
+async function resetPw(id){const pw=prompt(`New password for ${id} (min 8 characters):`,"");
+  if(pw===null)return;
+  const{st,j}=await api("POST",`/api/students/${id}/reset-password`,{password:pw});
+  alert(st===200?`Password reset for ${id}.`:(j.errors||["reset failed"]).join("; "));}
+dash();loadBank();loadCfg();loadTopics();loadStudents();pidAuto();
 </script>
 </body>
 </html>

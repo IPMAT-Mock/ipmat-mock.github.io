@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Sign up — IPMAT Mock</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f4f6fb;margin:0;color:#1a2333}
+.wrap{max-width:520px;margin:32px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(15,30,60,.06)}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#64748b;font-size:14px;margin:0 0 18px}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+input[type=text],input[type=email],input[type=tel],input[type=password]{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+input:focus{outline:2px solid #2563eb;border-color:#2563eb}
+.row2{display:flex;gap:12px}.row2>div{flex:1}
+.tc{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:13px;color:#475569;max-height:130px;overflow:auto;margin-top:12px}
+.tc+label{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:10px}
+.tc+label input{margin-top:3px}
+button{width:100%;margin-top:16px;background:#1d4ed8;color:#fff;border:0;border-radius:8px;padding:12px;font-size:16px;font-weight:700;cursor:pointer}
+button:disabled{background:#93c5fd;cursor:wait}
+.err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px;font-size:14px;margin-top:12px}
+.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:8px;padding:14px;font-size:15px;margin-top:12px}
+.ok a{color:#15803d;font-weight:700}
+.foot{text-align:center;color:#64748b;font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+  <h1>Student sign up</h1>
+  <p class="sub">Create your account to take IPMAT mock tests.</p>
+  <form id="f" novalidate>
+    <div class="row2">
+      <div><label for="first">First name</label><input id="first" type="text" autocomplete="given-name" maxlength="50" required></div>
+      <div><label for="last">Last name</label><input id="last" type="text" autocomplete="family-name" maxlength="50" required></div>
+    </div>
+    <label for="email">Email-id</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+    <label for="mobile">Mobile number</label><input id="mobile" type="tel" autocomplete="tel" placeholder="10-digit mobile" required>
+    <label for="pw">Password (min 8 characters)</label><input id="pw" type="password" autocomplete="new-password" required>
+    <label for="pw2">Confirm password</label><input id="pw2" type="password" autocomplete="new-password" required>
+    <div class="tc"><b>Terms &amp; Conditions.</b> (1) Your name, email-id and mobile number are collected only to manage your mock-test account. (2) Your password is stored as a one-way hash and cannot be read by anyone, including the administrators. (3) Test content is for your personal preparation only — do not copy or redistribute it. (4) The administrators may reset your password or remove your account on request via your registered email-id.</div>
+    <label><input id="tc" type="checkbox"> I have read and accept the Terms &amp; Conditions above.</label>
+    <button id="go" type="submit">Create account</button>
+  </form>
+  <div id="msg"></div>
+  <p class="foot">Already registered? <a href="/public/signin.html">Sign in</a>.</p>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const errs=[];
+  const first=$("first").value.trim(),last=$("last").value.trim(),
+        email=$("email").value.trim(),mobile=$("mobile").value.trim(),
+        pw=$("pw").value,pw2=$("pw2").value;
+  if(!first)errs.push("First name is required.");
+  if(!last)errs.push("Last name is required.");
+  if(!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email))errs.push("Enter a valid email-id.");
+  if(!/^[\d+\-\s]{10,14}$/.test(mobile))errs.push("Enter a valid 10-digit mobile number.");
+  if(pw.length<8)errs.push("Password must be at least 8 characters.");
+  if(pw!==pw2)errs.push("Passwords do not match.");
+  if(!$("tc").checked)errs.push("Please accept the Terms & Conditions.");
+  if(errs.length){$("msg").innerHTML=`<div class="err">${errs.join("<br>")}</div>`;return;}
+  $("go").disabled=true;$("go").textContent="Creating…";
+  try{
+    const r=await fetch("/api/students/signup",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({first_name:first,last_name:last,email,mobile,password:pw,accepted_tc:$("tc").checked})});
+    const j=await r.json();
+    if(r.status===201&&j.ok){
+      $("msg").innerHTML=`<div class="ok">Welcome, <b>${j.name.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</b>! Your account <b>${j.id}</b> is ready. <a href="/public/signin.html">Sign in →</a></div>`;
+      $("f").reset();
+    }else{
+      $("msg").innerHTML=`<div class="err">${(j.errors||["Signup failed. Please try again."]).join("<br>")}</div>`;
+    }
+  }catch(_){$("msg").innerHTML=`<div class="err">Could not reach the server. This page needs the admin backend running (open it via the local server, not as a static file).</div>`;}
+  $("go").disabled=false;$("go").textContent="Create account";
+});
+</script>
+</body>
+</html>

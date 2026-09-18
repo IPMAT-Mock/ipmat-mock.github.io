@@ -1,6 +1,6 @@
 # AGENT.md — IPMAT Mock System
 
-Version: 3.5.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
+Version: 3.7.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
 
 ## 1. What this project is
 Hybrid mock-generation system for IPMAT (IIMB pattern) with a local admin app:
@@ -39,9 +39,10 @@ prompts/ ──generate──▶ bank/*.jsonl ──assemble──▶ papers/*.j
 | Taxonomy | `config/topics.json` | single source of truth: section → bucket {label, subtopics, aliases}; managed via admin Topics tab / `/api/topics` (add/update/rename-with-migration/delete-if-unused); bank adds reject unknown topics |
 | Migrator | `scripts/migrate_legacy.py` | legacy (+4/−1, `stem/answer`, Prompt1) → v2 |
 | Runner | `public/index.html` | Study/Exam/Simulation modes; paper picker from `public/papers/index.json`; `?paper=<id\|file>`; Simulation = strict, review-after-submit |
+| Public site | `public/landing.html`, `public/signup.html`, `public/signin.html` | landing (pattern band, modes, live bank/paper counts via `/api/health`+`/api/papers` with static fallbacks) → signup/signin (Flask-backed; static Pages deploys show a server-unreachable note) → runner |
 | Manifest | `public/papers/index.json` | published set (id/title/file/kind/questions/time_sec) |
-| Admin BE | `app/server.py` (:5057, 127.0.0.1) | `/api/bank|blueprints|assemble|papers/publish|usage|config|llm/*`; LLM loop gated by `app/llm.config.json` (`enabled`); publish rejects duplicate paper_id with 409 unless `overwrite:true`; `/api/usage` maps qid → manifest papers (+orphan paper files missing from the manifest) |
-| Admin UI | `app/admin.html` | dashboard, bank browser+add (Used-in column + used/never-used filter, ⚠ flags paper files missing from the manifest), blueprint manager (CRUD + dry-run vs bank), paper wizard (kind/count/subject/single-or-mix/difficulty, unique auto-suggested Paper ID, overwrite confirm, saved-file message), LLM, config |
+| Admin BE | `app/server.py` (:5057, 127.0.0.1) | `/api/bank|blueprints|assemble|papers/publish|usage|config|students/*|llm/*`; LLM loop gated by `app/llm.config.json` (`enabled`); publish rejects duplicate paper_id with 409 unless `overwrite:true`; `/api/usage` maps qid → manifest papers (+orphan paper files missing from the manifest); student signup (`POST /api/students/signup`, unique email 409, scrypt-hashed passwords in git-ignored `data/students.json`) + signin (`POST /api/students/signin`, generic 401) + admin list/delete/reset-password |
+| Admin UI | `app/admin.html` | dashboard, bank browser+add (Used-in column + used/never-used filter, ⚠ flags paper files missing from the manifest), blueprint manager (CRUD + dry-run vs bank), paper wizard (kind/count/subject/single-or-mix/difficulty, unique auto-suggested Paper ID, overwrite confirm, saved-file message), students manager (search/reset-pw/delete), LLM, config |
 | Config | `config/exam.config.json` | time/marking/sections (marking locked +3/−1/0 by server) |
 
 Data flow: batch (prompt) → validate → bank → assemble (seeded) → validate

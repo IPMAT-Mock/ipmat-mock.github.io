@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Sign in — IPMAT Mock</title>
+<style>
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#f4f6fb;margin:0;color:#1a2333}
+.wrap{max-width:520px;margin:32px auto;padding:0 16px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(15,30,60,.06)}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#64748b;font-size:14px;margin:0 0 18px}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+input[type=email],input[type=password]{width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+input:focus{outline:2px solid #2563eb;border-color:#2563eb}
+button{width:100%;margin-top:16px;background:#1d4ed8;color:#fff;border:0;border-radius:8px;padding:12px;font-size:16px;font-weight:700;cursor:pointer}
+button:disabled{background:#93c5fd;cursor:wait}
+.err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px;font-size:14px;margin-top:12px}
+.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;border-radius:8px;padding:14px;font-size:15px;margin-top:12px}
+.ok a{color:#15803d;font-weight:700}
+.foot{text-align:center;color:#64748b;font-size:13px;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+  <h1>Student sign in</h1>
+  <p class="sub">Welcome back — sign in with your registered email-id.</p>
+  <form id="f" novalidate>
+    <label for="email">Email-id</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+    <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required>
+    <button id="go" type="submit">Sign in</button>
+  </form>
+  <div id="msg"></div>
+  <p class="foot">New here? <a href="/public/signup.html">Create an account</a></p>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);
+$("f").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const email=$("email").value.trim(),pw=$("pw").value;
+  if(!email||!pw){$("msg").innerHTML=`<div class="err">Enter your email-id and password.</div>`;return;}
+  $("go").disabled=true;$("go").textContent="Signing in…";
+  try{
+    const r=await fetch("/api/students/signin",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email,password:pw})});
+    const j=await r.json();
+    if(r.status===200&&j.ok){
+      try{localStorage.setItem("ipmat_student",JSON.stringify({id:j.id,name:j.name}));}catch(_){}
+      $("msg").innerHTML=`<div class="ok">You are signed in as <b>${String(j.name).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</b>.</div>`;
+      $("f").reset();
+    }else{
+      $("msg").innerHTML=`<div class="err">${(j.errors||["Sign in failed. Please try again."]).join("<br>")}</div>`;
+    }
+  }catch(_){$("msg").innerHTML=`<div class="err">Could not reach the server. This page needs the admin backend running (open it via the local server, not as a static file).</div>`;}
+  $("go").disabled=false;$("go").textContent="Sign in";
+});
+</script>
+</body>
+</html>

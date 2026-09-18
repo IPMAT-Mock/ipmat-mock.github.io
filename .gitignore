@@ -1,3 +1,5 @@
 .venv/
 __pycache__/
 data/
+# local secrets — never commit (see app/llm.config.example.json for the shape)
+app/llm.config.json

@@ -896,7 +896,7 @@ def _normalize_llm_config(raw):
         leg.setdefault("model", raw.get("model") or "")
         leg.setdefault("api_key", raw.get("api_key") or "")
     providers["openai"].setdefault("base_url", "https://api.openai.com/v1")
-    providers["gemini"].setdefault("model", "gemini-2.0-flash")
+    providers["gemini"].setdefault("model", "gemini-2.5-flash")
     prov = (raw.get("provider") or "openai").lower()
     if prov == "openai-compatible":
         prov = "openai"
@@ -952,6 +952,7 @@ def _gemini_request(pconf, system, user):
 
     System prompt goes in systemInstruction, batch prompt in contents;
     responseMimeType JSON keeps the reply parseable by _extract_questions.
+    Sampling left at the model default (Google advises defaults for 3.x).
     """
     return (f"https://generativelanguage.googleapis.com/v1beta/models/"
             f"{pconf.get('model')}:generateContent",
@@ -959,8 +960,7 @@ def _gemini_request(pconf, system, user):
              "Content-Type": "application/json"},
             {"systemInstruction": {"parts": [{"text": system}]},
              "contents": [{"parts": [{"text": user}]}],
-             "generationConfig": {"responseMimeType": "application/json",
-                                  "temperature": 0.7}})
+             "generationConfig": {"responseMimeType": "application/json"}})
 
 
 def _gemini_text(payload):
@@ -1010,6 +1010,38 @@ def llm_prompt():
     return jsonify({"ok": True, "system": system, "user": user})
 
 
+def _provider_error(r):
+    """Best-effort human message from a provider error reply (no secrets)."""
+    try:
+        err = (r.json() or {}).get("error")
+    except Exception:
+        err = None
+    if isinstance(err, dict) and err.get("message"):
+        return str(err["message"])[:300]
+    return (r.text or "")[:300]
+
+
+def _post_with_retry(url, headers, payload, tries=3):
+    """POST with backoff on transient provider strain (429/503/timeout)."""
+    import time
+    import requests
+    last = None
+    for attempt in range(tries):
+        try:
+            r = requests.post(url, headers=headers, json=payload, timeout=120)
+            if r.status_code not in (429, 503):
+                return r
+            last = r
+        except (requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError) as e:
+            last = e
+        if attempt < tries - 1:
+            time.sleep(8 if attempt == 0 else 20)
+    if isinstance(last, BaseException):
+        raise last
+    return last
+
+
 @app.post("/api/llm/generate")
 def llm_generate():
     cfg = _llm_config()
@@ -1033,13 +1065,18 @@ def llm_generate():
     try:
         if prov_name == "gemini":
             url, headers, payload = _gemini_request(pconf, system, user)
-            r = requests.post(url, headers=headers, json=payload, timeout=120)
-            r.raise_for_status()
-            text = _gemini_text(r.json())
         else:
             url, headers, payload = _openai_request(pconf, system, user)
-            r = requests.post(url, headers=headers, json=payload, timeout=120)
-            r.raise_for_status()
+        r = _post_with_retry(url, headers, payload)
+        if r.status_code in (429, 503):
+            return jsonify({"ok": False, "errors": [
+                f"LLM call failed ({prov_name}): {r.status_code} "
+                f"{_provider_error(r)} (provider strain — usually temporary; "
+                f"retry, or switch model, e.g. gemini-2.5-flash)"]}), 502
+        r.raise_for_status()
+        if prov_name == "gemini":
+            text = _gemini_text(r.json())
+        else:
             text = r.json()["choices"][0]["message"]["content"]
     except Exception as e:
         return jsonify({"ok": False, "errors": [f"LLM call failed ({prov_name}): {e}"]}), 502

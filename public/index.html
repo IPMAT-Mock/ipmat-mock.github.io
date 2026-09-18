@@ -110,6 +110,8 @@ button{font:inherit;cursor:pointer}
 .cell.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 .cell.current{outline:2px solid var(--ink);outline-offset:1px}
 .cell.flag::after{content:"";position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--flag)}
+.cell.s1{box-shadow:inset 0 -3px 0 var(--accent)} .cell.s2{box-shadow:inset 0 -3px 0 var(--good)} .cell.s3{box-shadow:inset 0 -3px 0 var(--flag)}
+.badge.df-Easy{background:var(--good-soft);color:var(--good)} .badge.df-Medium{background:var(--flag-soft);color:var(--flag)} .badge.df-Hard{background:var(--bad-soft);color:var(--bad)}
 .legend{margin-top:14px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--ink-soft)}
 .legend span{display:inline-flex;align-items:center;gap:7px}
 .sw{width:13px;height:13px;border-radius:4px;border:1.5px solid var(--line)}
@@ -117,6 +119,7 @@ button{font:inherit;cursor:pointer}
 .sw.g{background:var(--good-soft);border-color:var(--good)}
 .sw.r{background:var(--bad-soft);border-color:var(--bad)}
 .sw.f{background:var(--flag-soft);border-color:var(--flag)}
+.sw.s1{background:var(--accent-soft);border-color:var(--accent)} .sw.s2{background:var(--good-soft);border-color:var(--good)} .sw.s3{background:var(--flag-soft);border-color:var(--flag)}
 /* start & results */
 .hero{padding:34px 34px 30px;text-align:left}
 .hero h1{font-size:30px;letter-spacing:-.02em}
@@ -525,7 +528,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     var html='<div class="qmeta">'+
       '<span class="qnum">Question '+(i+1)+' / '+Q.length+'</span>'+
       '<span class="badge d'+(q.domain||1)+'">'+esc(shortDomain(q.domain))+'</span>'+
-      (q.difficulty?'<span class="badge diff">'+esc(q.difficulty)+'</span>':'')+
+      (q.difficulty?'<span class="badge diff df-'+esc(q.difficulty)+'">'+esc(q.difficulty)+'</span>':'')+
       '</div>'+
       (q.scenario?'<div style="margin-bottom:10px"><span class="badge sc">'+esc(q.scenario)+'</span> <span class="tag">'+esc(dname)+'</span></div>':'')+
       '<div class="stem">'+esc(q.stem)+'</div><div class="opts">';
@@ -595,12 +598,12 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
   function buildLegend(){
     var h='<span><i class="sw a"></i> Answered</span>';
     if(isStudy()) h='<span><i class="sw g"></i> Correct (+3)</span><span><i class="sw r"></i> Wrong (−1)</span><span><i class="sw a"></i> Not checked yet</span>';
-    h+='<span><i class="sw f"></i> Flagged</span><span><i class="sw"></i> Skipped (0)</span>';
+    h+='<span><i class="sw f"></i> Flagged</span><span><i class="sw"></i> Skipped (0)</span><span><i class="sw s1"></i> QA</span><span><i class="sw s2"></i> VA-RC</span><span><i class="sw s3"></i> LR</span>';
     el("legend").innerHTML=h;
   }
   function buildPalette(){
     var h="";
-    for(var i=0;i<Q.length;i++) h+='<button class="cell" data-i="'+i+'">'+(i+1)+'</button>';
+    for(var i=0;i<Q.length;i++) h+='<button class="cell s'+(Q[i].domain||1)+'" data-i="'+i+'">'+(i+1)+'</button>';
     palette.innerHTML=h;
     Array.prototype.forEach.call(palette.querySelectorAll(".cell"),function(c){
       c.onclick=function(){ state.cur=parseInt(c.getAttribute("data-i"),10); save(); renderQ(); scrollToQ(); };
@@ -735,7 +738,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
       }
       var mark = isCorrect?'<span class="pill pass" style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--good-soft);color:var(--good)">Correct +3</span>':(picked===undefined?'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--panel-2);color:var(--ink-soft)">Skipped · 0</span>':'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--bad-soft);color:var(--bad)">Wrong −1</span>');
       list.innerHTML+='<div class="card rev">'+
-        '<div class="qmeta"><span class="qnum">Q'+(idx+1)+'</span><span class="badge d'+(q.domain||1)+'">'+esc(shortDomain(q.domain))+'</span>'+(q.difficulty?'<span class="badge diff">'+esc(q.difficulty)+'</span>':'')+(state.flags[id]?'<span class="badge d3">⚑ flagged</span>':'')+'<div class="spacer"></div>'+mark+'</div>'+
+        '<div class="qmeta"><span class="qnum">Q'+(idx+1)+'</span><span class="badge d'+(q.domain||1)+'">'+esc(shortDomain(q.domain))+'</span>'+(q.difficulty?'<span class="badge diff df-'+esc(q.difficulty)+'">'+esc(q.difficulty)+'</span>':'')+(state.flags[id]?'<span class="badge d3">⚑ flagged</span>':'')+'<div class="spacer"></div>'+mark+'</div>'+
         (q.scenario?'<div style="margin:2px 0 8px"><span class="badge sc">'+esc(q.scenario)+'</span></div>':'')+
         '<div class="rq">'+esc(q.stem)+'</div><div class="opts">'+opts+'</div>'+
         (q.explanation?'<div class="expl"><b>Solution ('+LETTERS(q.answer)+').</b> '+esc(q.explanation)+'</div>':'')+'</div>';

@@ -29,6 +29,9 @@ span.q{display:inline-block;width:15px;height:15px;line-height:15px;text-align:c
 .tab{display:none}.tab.on{display:block}
 pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:auto;font-size:12.5px;max-height:300px}
 .stem{max-width:560px}
+.pill{display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;border-radius:999px;letter-spacing:.02em;white-space:nowrap}
+.sec-QA{background:#e3ebfb;color:#1d4ed8}.sec-LR{background:#f6eccf;color:#8a5a00}.sec-VARC{background:#e3f2e9;color:#1c6b3a}
+.dif-Easy{background:#e3f2e9;color:#1c6b3a}.dif-Medium{background:#f6eccf;color:#8a5a00}.dif-Hard{background:#f7e3e1;color:#a12323}
 </style>
 </head>
 <body>
@@ -45,7 +48,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-bank">
   <div class="card"><h2>Browse bank</h2>
-    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter. <b>Used in</b> lists every published paper containing the question (click to open it in the runner; — means never used) — combine with the <b>Usage</b> filter to find unused questions. <b>Subtopic</b> shows the canonical syllabus tag (every question carries one); filter by it with the <b>Subtopic</b> box.</p>
+    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter. <b>Used in</b> lists every published paper containing the question (click to open it in the runner; — means never used) — combine with the <b>Usage</b> filter to find unused questions. <b>Subtopic</b> shows the canonical syllabus tag (every question carries one); filter by it with the <b>Subtopic</b> box. Colour legend: <span class="pill sec-QA">QA</span> blue · <span class="pill sec-LR">LR</span> amber · <span class="pill sec-VARC">VARC</span> green, and <span class="pill dif-Easy">Easy</span> / <span class="pill dif-Medium">Medium</span> / <span class="pill dif-Hard">Hard</span> — used across the bank, dashboard, blueprints, paper preview and Papers breakdown.</p>
     <div class="row">
       <label title="Restrict to one section, or leave as all.">Section <select id="fSec"><option value="">all</option><option>QA</option><option>LR</option><option>VARC</option></select></label>
       <label title="Blueprint bucket, e.g. Arithmetic, Arrangements, ReadingComprehension.">Topic <input id="fTopic" placeholder="e.g. Arithmetic" size="18"></label>
@@ -80,7 +83,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <h3>Field glossary</h3>
     <table><tr><th>Field</th><th>Meaning</th></tr>
     <tr><td>Exam kind</td><td><b>Mock</b> = standard timed paper · <b>Simulation</b> = exam-day strict (no hints/pauses, solutions locked till submit) · <b>Practice</b> = short set, e.g. drills.</td></tr>
-    <tr><td>Seed</td><td>Random draw control: <b>same bank + same seed = same paper</b>. Change it for a fresh selection.</td></tr>
+    <tr><td>Seed</td><td><b>Random draw control — same bank + same spec + same seed = the identical paper.</b> The seed shuffles each bucket's candidate pool before picking (<code>scripts/banklib.py:assemble</code> uses <code>random.Random(seed)</code>), and also drives the difficulty auto-repair swaps; answer-position balancing is deterministic and seed-independent. Default <b>42</b> (blueprint <b>Check against bank</b> always dry-runs with 42). The used seed is stored as <code>meta.seed</code> inside the paper and shown in the <b>Papers</b> tab breakdown — so to regenerate an exact paper, reuse its blueprint/spec <i>and</i> its seed. Caveats: adding, removing or reordering bank lines reshuffles the draw even with the same seed; different seeds on one blueprint give different-but-equally-valid variants (handy for parallel sets). CLI equivalent: <code>--seed &lt;n&gt;</code>.</td></tr>
     <tr><td>Paper ID</td><td><b>Unique id per paper — it becomes the filename</b> <code>papers/&lt;Paper ID&gt;.json</code>. Auto-suggested from the title + timestamp; publishing a duplicate Paper ID is blocked unless you confirm the overwrite.</td></tr>
     <tr><td>Section mix vs single topic</td><td><b>Mix</b> auto-splits across the section's taxonomy buckets · <b>Single topic</b> takes all questions from one bucket (drills).</td></tr>
     <tr><td>Difficulties</td><td>Restricts the pool before picking. Unticking a level can cause "bank short" if too little remains.</td></tr></table>
@@ -100,7 +103,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <tr><td><code>marks</code> / <code>time_sec</code></td><td>Locked to <code>+3 / −1 / 0</code>; time 30–600 s.</td></tr>
     <tr><td><code>solution</code> / <code>hint</code></td><td>Solution (full explanation) is <b>required</b>; hint (short nudge) is recommended. Both show in the bank detail view.</td></tr></table>
     <h3 id="g-browse">Questions tab — browsing the bank</h3>
-    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance. The <b>Used in</b> column shows which published papers each question appears in (paper IDs link straight to the runner; <b>⚠</b> marks a paper file missing from the runner manifest); the <b>Usage</b> dropdown filters to <b>used</b> or <b>never used</b> questions — handy for spotting bank gaps before writing new questions. The <b>Subtopic</b> column shows each question's canonical syllabus tag with a substring <b>Subtopic</b> filter — every question carries exactly one, enforced against the Topics tab on add.</p>
+    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance. The <b>Used in</b> column shows which published papers each question appears in (paper IDs link straight to the runner; <b>⚠</b> marks a paper file missing from the runner manifest); the <b>Usage</b> dropdown filters to <b>used</b> or <b>never used</b> questions — handy for spotting bank gaps before writing new questions. The <b>Subtopic</b> column shows each question's canonical syllabus tag with a substring <b>Subtopic</b> filter — every question carries exactly one, enforced against the Topics tab on add. Sections and difficulties are colour-coded everywhere (<span class="pill sec-QA">QA</span> blue, <span class="pill sec-LR">LR</span> amber, <span class="pill sec-VARC">VARC</span> green; <span class="pill dif-Easy">Easy</span> / <span class="pill dif-Medium">Medium</span> / <span class="pill dif-Hard">Hard</span>); the runner mirrors this with section-tinted palette cells and difficulty badges.</p>
     <h3 id="g-topics">Topics tab — managing the taxonomy</h3>
     <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. Edit <b>label / subtopics / aliases</b> inline and <b>Save</b> (aliases let old topic names keep resolving). <b>Rename</b> migrates bank questions + blueprint mixes automatically and reports counts. <b>Delete</b> is blocked with exact usage while questions or blueprints reference the bucket. An <b>unmapped topics</b> alert flags any bank question matching no bucket — fix by adding an alias or correcting the question. Changes apply to assembly immediately.</p>
     <h3 id="g-bp">Blueprints tab — managing recipes</h3>
@@ -108,7 +111,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <h3 id="g-papers">Papers tab — paper manager</h3>
     <p class="hint">Every published paper as a card: <b>Breakdown</b> shows difficulty bars, section/topic/subtopic splits, answer balance, schema + bank integrity, and expected-vs-actual rows when a blueprint shares the paper's ID. <b>Unpublish</b> drops the runner listing only (files stay — the paper shows as an orphan and can be re-published). <b>Delete</b> removes the listing and both files after a double confirm. Dashboard rows link here via <b>details →</b>.</p>
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
-    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
+    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved. If Gemini answers <b>503 high demand</b>, the server already retried with backoff — just try again later, or switch the model to <code>gemini-2.5-flash</code> (the newest Flash can be capacity-tight at peak).</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
     <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p>
     <h3 id="g-students">Students tab — registered accounts</h3>
@@ -157,7 +160,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <label title="Saved blueprint = a fixed recipe from blueprints/. Custom spec = build your own below (counts, topics, difficulties).">Source <span class="q">?</span> <select id="wSrc" onchange="srcFlip()"><option value="blueprint">Saved blueprint</option><option value="custom">Custom spec</option></select></label>
       <label title="Shown in the runner paper picker.">Title <span class="q">?</span> <input id="wTitle" size="24" value="IPMAT Custom Paper" oninput="pidAuto()"></label>
       <label title="Unique id for this paper — becomes the filename papers/<Paper ID>.json. Auto-suggested from the title; publishing a duplicate Paper ID is blocked unless you confirm the overwrite.">Paper ID <span class="q">?</span> <input id="wPid" size="22" value="" oninput="pidTouched=true"></label>
-      <label title="Same seed + same bank = same paper. Change the seed for a different random selection.">Seed <span class="q">?</span> <input id="wSeed" size="6" value="42"></label>
+      <label title="Random draw control (default 42): shuffles each bucket's candidates before picking. Same bank + same spec + same seed = identical paper — the used seed is stored in the paper and shown in the Papers tab breakdown. Change it for a different-but-equally-valid variant.">Seed <span class="q">?</span> <input id="wSeed" size="6" value="42"></label>
     </div>
     <div id="wBpRow" class="row"><label>Blueprint <select id="wBp"></select></label></div>
     <div id="wCustom" style="display:none">
@@ -219,7 +222,7 @@ async function loadTopics(){const{st,j}=await api("GET","/api/topics");if(st!==2
   TAX=j.taxonomy;
   $("unmapped").innerHTML=(j.unmapped||[]).length?`<p class="err">Unmapped bank topics (add an alias or fix the question): ${j.unmapped.map(u=>`${u.section}/${u.topic} ×${u.count}`).join(", ")}</p>`:"";
   let h="";
-  for(const sec of Object.keys(TAX)){h+=`<h3>${sec} — ${TAX[sec].label}</h3><table><tr><th>Bucket key</th><th>Label</th><th>Subtopics (comma-separated)</th><th>Aliases (comma-separated)</th><th>Qs</th><th></th></tr>`;
+  for(const sec of Object.keys(TAX)){h+=`<h3>${secPill(sec)} ${TAX[sec].label}</h3><table><tr><th>Bucket key</th><th>Label</th><th>Subtopics (comma-separated)</th><th>Aliases (comma-separated)</th><th>Qs</th><th></th></tr>`;
     for(const b of Object.keys(TAX[sec].buckets)){const bi=TAX[sec].buckets[b];
       h+=`<tr><td><b>${b}</b></td><td><input data-sec="${sec}" data-b="${b}" class="eLabel" size="20" value="${bi.label}"></td><td><input data-sec="${sec}" data-b="${b}" class="eSub" size="40" value="${(bi.subtopics||[]).join(", ")}"></td><td><input data-sec="${sec}" data-b="${b}" class="eAli" size="40" value="${(bi.aliases||[]).join(", ")}" title="Old topic names that resolve to this bucket"></td><td>${bi.questions}</td><td><button class="btn" onclick="saveBucket('${sec}','${b}')">Save</button> <button class="ghost btn" onclick="renameBucket('${sec}','${b}')">Rename</button> <button class="ghost btn" onclick="delBucket('${sec}','${b}')">Delete</button></td></tr>`;}
     h+="</table>";}
@@ -241,13 +244,16 @@ async function delBucket(sec,b){if(!confirm(`Delete bucket ${sec}/${b}? Blocked 
   const{st,j}=await api("POST","/api/topics",{action:"delete",section:sec,bucket:b});
   if(st!==200){alert(j.errors.join("; "));return;}await loadTopics();}
 async function api(m,u,b){const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));return{st:r.status,j};}
+/* section + difficulty pills: QA=blue, LR=amber, VARC=green; Easy/Medium/Hard green/amber/red */
+function secPill(s){return ["QA","LR","VARC"].includes(s)?`<span class="pill sec-${s}">${s}</span>`:s;}
+function difPill(d){return ["Easy","Medium","Hard"].includes(d)?`<span class="pill dif-${d}">${d}</span>`:d;}
 /* ---- Blueprints tab ---- */
 let BP_CACHE=[];
 async function loadBlueprints(){const{st,j}=await api("GET","/api/blueprints");if(st!==200)return;
   BP_CACHE=j.blueprints||[];
   const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
   $("bpList").innerHTML=`<table><tr><th>File</th><th>Title / paper_id</th><th>Kind</th><th>Total</th><th>Sections (mix)</th><th>Difficulty</th><th></th></tr>`+
-   BP_CACHE.map(b=>{const secs=(b.sections||[]).map(s=>`${s.code}×${s.count}${s.mix?` (${Object.entries(s.mix).map(([k,v])=>k+":"+v).join(", ")})`:""}`).join("<br>");
+   BP_CACHE.map(b=>{const secs=(b.sections||[]).map(s=>`${secPill(s.code)}×${s.count}${s.mix?` (${Object.entries(s.mix).map(([k,v])=>k+":"+v).join(", ")})`:""}`).join("<br>");
      const ds=b.difficulty_split?Object.entries(b.difficulty_split).map(([k,v])=>k+":"+v).join(" "):"<span class='muted'>—</span>";
      return `<tr><td><b>${esc(b.file)}</b></td><td>${esc(b.title||"")}<br><span class="muted">${esc(b.paper_id||"")}</span>${b.error?`<br><span class="err">${esc(b.error)}</span>`:""}</td><td>${esc(b.kind||"")}</td><td>${b.total??"?"}</td><td>${secs}</td><td>${ds}</td><td style="white-space:nowrap"><button class="btn" onclick="bpEdit('${b.file}')">Edit</button> <button class="ghost btn" onclick="bpDuplicate('${b.file}')">Duplicate</button> <button class="ghost btn" onclick="bpDelete('${b.file}')">Delete</button> <button class="ghost btn" onclick="bpUse('${b.file}')" title="Jump to New paper with this blueprint selected">Use →</button></td></tr>`;}).join("")+"</table>";
   $("wBp").innerHTML=BP_CACHE.map(b=>`<option value="${b.file}">${esc(b.title||b.file)}</option>`).join("");
@@ -317,7 +323,7 @@ async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)ret
   $("bankTotal").textContent="· "+j.bank_questions+" questions";
   let h="<table><tr><th>Section</th><th>Bucket</th><th>Easy</th><th>Medium</th><th>Hard</th><th>Total</th></tr>";
   for(const s of Object.keys(j.stats))for(const b of Object.keys(j.stats[s])){const d=j.stats[s][b];
-    h+=`<tr><td>${s}</td><td>${b}</td><td>${d.Easy||0}</td><td>${d.Medium||0}</td><td>${d.Hard||0}</td><td>${(d.Easy||0)+(d.Medium||0)+(d.Hard||0)}</td></tr>`;}
+    h+=`<tr><td>${secPill(s)}</td><td>${b}</td><td>${d.Easy||0}</td><td>${d.Medium||0}</td><td>${d.Hard||0}</td><td>${(d.Easy||0)+(d.Medium||0)+(d.Hard||0)}</td></tr>`;}
   $("stats").innerHTML=h+"</table>";
   const p=await api("GET","/api/papers");
   $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><button class="ghost btn" onclick="gotoPapers('${e.id}')">details →</button><a href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
@@ -337,7 +343,7 @@ async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,t
    list.map((x,i)=>{const opts=(x.options||[]).map((o,k)=>`<div>${"ABCD"[k]}. ${esc(o)}${k===x.answer_index?' <b class="ok">✓</b>':''}</div>`).join("");
     const use=(window._usage[x.qid]||[]);
     const det=`<div><b>Subtopic:</b> ${x.subtopic?esc(x.subtopic):'<span class="muted">— none</span>'} (${esc(x.topic)})</div>${x.passage?`<div><b>Passage:</b> ${esc(x.passage)}</div>`:""}<div><b>Options:</b>${opts}</div><div><b>Hint:</b> ${x.hint?esc(x.hint):'<span class="muted">— none</span>'}</div><div><b>Solution:</b> ${x.solution?esc(x.solution):'<span class="err">— missing</span>'}</div><div><b>Used in:</b> ${use.length?use.map(p=>p.orphan?`<span class="muted">${esc(p.title)} (${esc(p.id)} ⚠ not in manifest)</span>`:`<a href="/public/index.html?paper=${encodeURIComponent(p.id)}" target="_blank">${esc(p.title)} (${esc(p.id)})</a>`).join(" · "):'<span class="muted">no published paper yet</span>'}</div>`;
-    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${x.section}</td><td>${esc(x.topic)}</td><td>${x.subtopic?esc(x.subtopic):'<span class="muted">—</span>'}</td><td>${x.difficulty}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td><td>${useCell(use)}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="8">${det}</td></tr>`;}).join("")+"</table>";}
+    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${secPill(x.section)}</td><td>${esc(x.topic)}</td><td>${x.subtopic?esc(x.subtopic):'<span class="muted">—</span>'}</td><td>${difPill(x.difficulty)}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td><td>${useCell(use)}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="8">${det}</td></tr>`;}).join("")+"</table>";}
 function toggleQ(i){const r=$("qd"+i);r.style.display=r.style.display==="none"?"":"none";}
 function fillTemplate(){$("newQ").value=JSON.stringify({qid:"QA-ARITH-014",section:"QA",topic:"Arithmetic",subtopic:"Percentages",difficulty:"Easy",marks:{correct:3,wrong:-1,skipped:0},time_sec:90,stem:"",options:["","","",""],answer_index:0,hint:"",solution:""},null,1);}
 async function addQ(){let q;try{q=JSON.parse($("newQ").value);}catch(e){$("addMsg").innerHTML='<span class="err">bad JSON</span>';return;}
@@ -378,6 +384,7 @@ async function assemble(){const body={kind:$("wKind").value,title:$("wTitle").va
   const dc={};j.paper.questions.forEach(q=>dc[q.difficulty]=(dc[q.difficulty]||0)+1);
   $("asmMsg").innerHTML='<span class="ok">assembled</span>';
   $("asmOut").innerHTML=`<h3>Preview: ${j.paper.title} (${j.paper.questions.length}Q)</h3>
+   <div class="row">${Object.entries(c).map(([s,t])=>`${secPill(s)} <b>${Object.values(t).reduce((a,b)=>a+b,0)}</b>`).join(" · ")}<span class="muted">|</span>${Object.entries(dc).map(([d,n])=>`${difPill(d)} <b>${n}</b>`).join(" · ")}</div>
    <pre>${JSON.stringify({mix:c,difficulty:dc,warnings:j.warnings},null,1)}</pre>
    <div class="row"><button class="btn" onclick="publish()">Publish to runner</button><span id="pubMsg"></span></div>`;}
 async function publish(overwrite=false){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
@@ -439,13 +446,13 @@ async function togglePaper(i){const box=$("pb"+i);if(box.dataset.open){box.inner
   if(st!==200){box.innerHTML=`<p class="err">${((j||{}).errors||["failed"]).join("; ")}</p>`;return;}
   const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const d=j.difficulty,tot=j.total||1;
-  const bar=(label,n)=>`<div>${label} <b>${n}</b> (${Math.round(100*n/tot)}%)<div style="background:#e2e8f0;border-radius:4px;height:8px"><div style="background:#1d4ed8;height:8px;border-radius:4px;width:${Math.round(100*n/tot)}%"></div></div></div>`;
+  const bar=(label,n,color)=>`<div>${label} <b>${n}</b> (${Math.round(100*n/tot)}%)<div style="background:#e2e8f0;border-radius:4px;height:8px"><div style="background:${color};height:8px;border-radius:4px;width:${Math.round(100*n/tot)}%"></div></div></div>`;
   const bp=j.blueprint?`<h4>Blueprint match — ${esc(j.blueprint.file)} ${j.blueprint.match?'<span class="ok">✓ all match</span>':'<span class="err">✗ differs</span>'}</h4><table><tr><th>check</th><th>expected</th><th>actual</th><th></th></tr>${j.blueprint.rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.expected}</td><td>${r.actual}</td><td>${r.match?'<span class="ok">✓</span>':'<span class="err">✗</span>'}</td></tr>`).join("")}</table>`:'<p class="muted">No blueprint shares this paper ID — no expected-vs-actual comparison.</p>';
   box.innerHTML=`<p class="muted">${esc(j.file)}${j.orphan?' · <span class="err">orphan — not in the runner manifest</span>':''} · seed ${j.seed??"—"} · marking +${j.marking.correct}/−${Math.abs(j.marking.wrong)}/${j.marking.skipped}</p>
-   <h4>Difficulty</h4>${bar("Easy",d.Easy)}${bar("Medium",d.Medium)}${bar("Hard",d.Hard)}
-   <h4>Sections</h4><p>QA <b>${j.sections.QA}</b> · LR <b>${j.sections.LR}</b> · VARC <b>${j.sections.VARC}</b></p>
-   <h4>Topics</h4><table><tr><th>section</th><th>topic</th><th>Qs</th></tr>${j.topics.map(t=>`<tr><td>${t.section}</td><td>${esc(t.topic)}</td><td>${t.count}</td></tr>`).join("")}</table>
-   <details><summary class="muted">Subtopic coverage (${j.subtopics.length})</summary><table><tr><th>section</th><th>topic</th><th>subtopic</th><th>Qs</th></tr>${j.subtopics.map(t=>`<tr><td>${t.section}</td><td>${esc(t.topic)}</td><td>${esc(t.subtopic)}</td><td>${t.count}</td></tr>`).join("")}</table></details>
+   <h4>Difficulty</h4>${bar("Easy",d.Easy,"#1c6b3a")}${bar("Medium",d.Medium,"#b97a00")}${bar("Hard",d.Hard,"#a12323")}
+   <h4>Sections</h4><p>${secPill("QA")} <b>${j.sections.QA}</b> · ${secPill("LR")} <b>${j.sections.LR}</b> · ${secPill("VARC")} <b>${j.sections.VARC}</b></p>
+   <h4>Topics</h4><table><tr><th>section</th><th>topic</th><th>Qs</th></tr>${j.topics.map(t=>`<tr><td>${secPill(t.section)}</td><td>${esc(t.topic)}</td><td>${t.count}</td></tr>`).join("")}</table>
+   <details><summary class="muted">Subtopic coverage (${j.subtopics.length})</summary><table><tr><th>section</th><th>topic</th><th>subtopic</th><th>Qs</th></tr>${j.subtopics.map(t=>`<tr><td>${secPill(t.section)}</td><td>${esc(t.topic)}</td><td>${esc(t.subtopic)}</td><td>${t.count}</td></tr>`).join("")}</table></details>
    <h4>Answers</h4><p>A <b>${j.answers.A}</b> · B <b>${j.answers.B}</b> · C <b>${j.answers.C}</b> · D <b>${j.answers.D}</b> ${j.answers_balanced?'<span class="ok">✓ balanced</span>':`<span class="err">✗ spread exceeds ±${j.answer_tolerance}</span>`}</p>
    <h4>Integrity</h4><p>${j.schema_errors.length?`<span class="err">schema: ${esc(j.schema_errors.join("; "))}</span>`:'<span class="ok">✓ schema clean</span>'} · ${j.in_bank}/${j.total} questions still in the bank</p>
    ${bp}`;

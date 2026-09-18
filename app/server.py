@@ -493,6 +493,43 @@ def papers():
     return jsonify(_manifest())
 
 
+@app.get("/api/usage")
+def usage():
+    """Map each bank qid -> published papers containing it [{id, title}].
+
+    Keyed off the runner manifest (what ?paper=<id> resolves), not the
+    paper file's own paper_id — the two can drift (e.g. practice-15q).
+    Paper files missing from the manifest are reported as orphans.
+    """
+    man = _manifest()
+    entries = man.get("papers", [])
+    by_file = {e.get("file"): e for e in entries}
+    use, orphans = {}, []
+    for f in sorted(PAPERS_DIR.glob("*.json")):
+        try:
+            paper = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        m = by_file.get(f.name)
+        if m:
+            pid, title, orphan = m.get("id"), m.get("title", m.get("id")), False
+        else:
+            pid = paper.get("paper_id") or f.stem
+            title = paper.get("title") or pid
+            orphan = True
+            if f.name not in orphans:
+                orphans.append(f.name)
+        for q in paper.get("questions", []) or []:
+            qid = q.get("qid")
+            if not qid:
+                continue
+            use.setdefault(qid, [])
+            if not any(e["id"] == pid for e in use[qid]):
+                use[qid].append({"id": pid, "title": title,
+                                 "orphan": orphan})
+    return jsonify({"usage": use, "papers": len(entries), "orphans": orphans})
+
+
 @app.post("/api/papers/publish")
 def publish():
     body = request.get_json(force=True) or {}

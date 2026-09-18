@@ -1,6 +1,6 @@
 # AGENT.md — IPMAT Mock System
 
-Version: 3.4.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
+Version: 3.5.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
 
 ## 1. What this project is
 Hybrid mock-generation system for IPMAT (IIMB pattern) with a local admin app:
@@ -40,8 +40,8 @@ prompts/ ──generate──▶ bank/*.jsonl ──assemble──▶ papers/*.j
 | Migrator | `scripts/migrate_legacy.py` | legacy (+4/−1, `stem/answer`, Prompt1) → v2 |
 | Runner | `public/index.html` | Study/Exam/Simulation modes; paper picker from `public/papers/index.json`; `?paper=<id\|file>`; Simulation = strict, review-after-submit |
 | Manifest | `public/papers/index.json` | published set (id/title/file/kind/questions/time_sec) |
-| Admin BE | `app/server.py` (:5057, 127.0.0.1) | `/api/bank|blueprints|assemble|papers/publish|config|llm/*`; LLM loop gated by `app/llm.config.json` (`enabled`); publish rejects duplicate paper_id with 409 unless `overwrite:true` |
-| Admin UI | `app/admin.html` | dashboard, bank browser+add, blueprint manager (CRUD + dry-run vs bank), paper wizard (kind/count/subject/single-or-mix/difficulty, unique auto-suggested Paper ID, overwrite confirm, saved-file message), LLM, config |
+| Admin BE | `app/server.py` (:5057, 127.0.0.1) | `/api/bank|blueprints|assemble|papers/publish|usage|config|llm/*`; LLM loop gated by `app/llm.config.json` (`enabled`); publish rejects duplicate paper_id with 409 unless `overwrite:true`; `/api/usage` maps qid → manifest papers (+orphan paper files missing from the manifest) |
+| Admin UI | `app/admin.html` | dashboard, bank browser+add (Used-in column + used/never-used filter, ⚠ flags paper files missing from the manifest), blueprint manager (CRUD + dry-run vs bank), paper wizard (kind/count/subject/single-or-mix/difficulty, unique auto-suggested Paper ID, overwrite confirm, saved-file message), LLM, config |
 | Config | `config/exam.config.json` | time/marking/sections (marking locked +3/−1/0 by server) |
 
 Data flow: batch (prompt) → validate → bank → assemble (seeded) → validate

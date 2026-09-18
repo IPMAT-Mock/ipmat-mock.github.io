@@ -27,7 +27,7 @@ py -m venv .venv
 1. `.\.venv\Scripts\python.exe app\server.py` → open http://127.0.0.1:5057
 2. New paper tab: pick exam kind (mock/simulation/practice), a blueprint or a custom spec (count, subject, single-topic-or-mix, difficulty) → Assemble → preview → Publish. Each paper needs a unique Paper ID (auto-suggested; it becomes the `papers/<id>.json` filename) — reusing an ID is blocked unless you confirm the overwrite.
 3. Take it in `public/index.html` (paper picker or `?paper=<id>`). Serve `public/` for full manifest support.
-4. Add questions via the Questions tab (schema-validated) or the LLM tab (needs `app/llm.config.json` enabled with an OpenAI-compatible endpoint).
+4. Add questions via the Questions tab (schema-validated) or the LLM tab (needs `app/llm.config.json` enabled with an OpenAI-compatible endpoint). The bank's <b>Used in</b> column shows which published paper each question appears in (with a used/never-used filter).
 
 ## Workflow (CLI)
 1. Generate batches with `prompts/generator-system.md` + section prompt → append JSONL to `bank/` (use bucket names as `topic` for new seeds).

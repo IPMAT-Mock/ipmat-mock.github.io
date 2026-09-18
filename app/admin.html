@@ -45,12 +45,13 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-bank">
   <div class="card"><h2>Browse bank</h2>
-    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter.</p>
+    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter. <b>Used in</b> lists every published paper containing the question (click to open it in the runner; — means never used) — combine with the <b>Usage</b> filter to find unused questions.</p>
     <div class="row">
       <label title="Restrict to one section, or leave as all.">Section <select id="fSec"><option value="">all</option><option>QA</option><option>LR</option><option>VARC</option></select></label>
       <label title="Blueprint bucket, e.g. Arithmetic, Arrangements, ReadingComprehension.">Topic <input id="fTopic" placeholder="e.g. Arithmetic" size="18"></label>
       <label title="Restrict to one difficulty level, or leave as all.">Difficulty <select id="fDiff"><option value="">all</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
       <label title="Free text matched against the question stem and qid.">Search <input id="fQ" placeholder="stem or qid" size="20"></label>
+      <label title="Show only questions used/unused in published papers.">Usage <select id="fUse"><option value="">all</option><option value="used">used in a paper</option><option value="unused">never used</option></select></label>
       <button class="btn" onclick="loadBank()">Filter</button>
     </div><div id="bankOut"></div></div>
   <div class="card"><h2>Add question</h2>
@@ -98,7 +99,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <tr><td><code>marks</code> / <code>time_sec</code></td><td>Locked to <code>+3 / −1 / 0</code>; time 30–600 s.</td></tr>
     <tr><td><code>solution</code> / <code>hint</code></td><td>Solution (full explanation) is <b>required</b>; hint (short nudge) is recommended. Both show in the bank detail view.</td></tr></table>
     <h3 id="g-browse">Questions tab — browsing the bank</h3>
-    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance.</p>
+    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance. The <b>Used in</b> column shows which published papers each question appears in (paper IDs link straight to the runner; <b>⚠</b> marks a paper file missing from the runner manifest); the <b>Usage</b> dropdown filters to <b>used</b> or <b>never used</b> questions — handy for spotting bank gaps before writing new questions.</p>
     <h3 id="g-topics">Topics tab — managing the taxonomy</h3>
     <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. Edit <b>label / subtopics / aliases</b> inline and <b>Save</b> (aliases let old topic names keep resolving). <b>Rename</b> migrates bank questions + blueprint mixes automatically and reports counts. <b>Delete</b> is blocked with exact usage while questions or blueprints reference the bucket. An <b>unmapped topics</b> alert flags any bank question matching no bucket — fix by adding an alias or correcting the question. Changes apply to assembly immediately.</p>
     <h3 id="g-bp">Blueprints tab — managing recipes</h3>
@@ -307,13 +308,20 @@ async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)ret
   await loadBlueprints();
   llmStat();}
 async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
-  const{st,j}=await api("GET","/api/bank?"+q);
+  const[bu,bk]=await Promise.all([api("GET","/api/usage"),api("GET","/api/bank?"+q)]);
+  const{st,j}=bk;window._usage=(bu.j&&bu.j.usage)||{};
+  let list=j.questions||[];const uf=$("fUse").value;
+  if(uf==="used")list=list.filter(x=>(window._usage[x.qid]||[]).length);
+  if(uf==="unused")list=list.filter(x=>!(window._usage[x.qid]||[]).length);
   const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  window._bank=j.questions;
-  $("bankOut").innerHTML=`<p class="muted">${j.count} match — click + on a row for options, hint and solution.</p><table><tr><th></th><th>qid</th><th>sec</th><th>topic</th><th>diff</th><th>stem</th><th>ans</th></tr>`+
-   j.questions.map((x,i)=>{const opts=(x.options||[]).map((o,k)=>`<div>${"ABCD"[k]}. ${esc(o)}${k===x.answer_index?' <b class="ok">✓</b>':''}</div>`).join("");
-    const det=`${x.passage?`<div><b>Passage:</b> ${esc(x.passage)}</div>`:""}<div><b>Options:</b>${opts}</div><div><b>Hint:</b> ${x.hint?esc(x.hint):'<span class="muted">— none</span>'}</div><div><b>Solution:</b> ${x.solution?esc(x.solution):'<span class="err">— missing</span>'}</div>`;
-    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${x.section}</td><td>${esc(x.topic)}</td><td>${x.difficulty}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="6">${det}</td></tr>`;}).join("")+"</table>";}
+  const useLink=p=>p.orphan?`<span class="muted" title="file published but missing from the runner manifest">${esc(p.id)} ⚠</span>`:`<a href="/public/index.html?paper=${encodeURIComponent(p.id)}" target="_blank" title="${esc(p.title)}">${esc(p.id)}</a>`;
+  const useCell=u=>u.length?u.map(useLink).join("<br>"):'<span class="muted">—</span>';
+  window._bank=list;
+  $("bankOut").innerHTML=`<p class="muted">${list.length} match (of ${j.count}) — click + on a row for options, hint, solution and paper usage.</p><table><tr><th></th><th>qid</th><th>sec</th><th>topic</th><th>diff</th><th>stem</th><th>ans</th><th>used in</th></tr>`+
+   list.map((x,i)=>{const opts=(x.options||[]).map((o,k)=>`<div>${"ABCD"[k]}. ${esc(o)}${k===x.answer_index?' <b class="ok">✓</b>':''}</div>`).join("");
+    const use=(window._usage[x.qid]||[]);
+    const det=`${x.passage?`<div><b>Passage:</b> ${esc(x.passage)}</div>`:""}<div><b>Options:</b>${opts}</div><div><b>Hint:</b> ${x.hint?esc(x.hint):'<span class="muted">— none</span>'}</div><div><b>Solution:</b> ${x.solution?esc(x.solution):'<span class="err">— missing</span>'}</div><div><b>Used in:</b> ${use.length?use.map(p=>p.orphan?`<span class="muted">${esc(p.title)} (${esc(p.id)} ⚠ not in manifest)</span>`:`<a href="/public/index.html?paper=${encodeURIComponent(p.id)}" target="_blank">${esc(p.title)} (${esc(p.id)})</a>`).join(" · "):'<span class="muted">no published paper yet</span>'}</div>`;
+    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${x.section}</td><td>${esc(x.topic)}</td><td>${x.difficulty}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td><td>${useCell(use)}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="7">${det}</td></tr>`;}).join("")+"</table>";}
 function toggleQ(i){const r=$("qd"+i);r.style.display=r.style.display==="none"?"":"none";}
 function fillTemplate(){$("newQ").value=JSON.stringify({qid:"QA-ARITH-014",section:"QA",topic:"Arithmetic",subtopic:"Percentages",difficulty:"Easy",marks:{correct:3,wrong:-1,skipped:0},time_sec:90,stem:"",options:["","","",""],answer_index:0,hint:"",solution:""},null,1);}
 async function addQ(){let q;try{q=JSON.parse($("newQ").value);}catch(e){$("addMsg").innerHTML='<span class="err">bad JSON</span>';return;}

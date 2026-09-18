@@ -1,0 +1,30 @@
+# Stage deployment (podman). Run from repo root:
+#   podman compose up -d --build     (podman >= 4.1, or: podman-compose up -d --build)
+name: ipmat-stage
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: ipmat-stage:latest
+    ports:
+      - "5057:5057"
+    environment:
+      IPMAT_HOST: 0.0.0.0
+      IPMAT_PORT: 5057
+    volumes:
+      # student accounts persist across rebuilds; everything else is baked into the image
+      - ipmat-data:/app/data
+      # Optional: enable LLM features in staging by mounting a key file (NEVER commit it):
+      # - ./app/llm.config.json:/app/app/llm.config.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5057/api/health', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  ipmat-data:

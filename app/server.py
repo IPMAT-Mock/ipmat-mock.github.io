@@ -1223,5 +1223,8 @@ def _extract_questions(text):
 
 
 if __name__ == "__main__":
-    print("IPMAT admin on http://127.0.0.1:5057  (local only)")
-    app.run(host="127.0.0.1", port=5057, debug=False)
+    import os
+    host = os.environ.get("IPMAT_HOST", "127.0.0.1")
+    port = int(os.environ.get("IPMAT_PORT", "5057"))
+    print(f"IPMAT admin on http://{host}:{port}")
+    app.run(host=host, port=port, debug=False)

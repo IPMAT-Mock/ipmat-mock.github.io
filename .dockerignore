@@ -1,0 +1,12 @@
+# Build context exclusions (honored by both podman and docker builds)
+.venv/
+__pycache__/
+.git/
+.github/
+data/
+.venv*/
+*.pyc
+# local secrets — never bake into the image
+app/llm.config.json
+# dev scratch
+*.bat

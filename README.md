@@ -36,3 +36,38 @@ py -m venv .venv
 3. `.\.venv\Scripts\python.exe scripts\assemble_paper.py --blueprint blueprints\full-mock-60q.yaml --bank bank --out papers\mock-02.json --seed 43`
 4. Publish: copy to `public/papers/` and upsert `public/papers/index.json` (or use the admin Publish button).
 5. Legacy: `scripts\migrate_legacy.py <old.json> --out bank\<section>.jsonl --section QA`
+
+## Stage on a VM (podman)
+Same app, containerized — for testing on a server before any real hosting.
+Repo root has `Containerfile` (python:3.12-slim, runs as non-root, exposes 5057,
+`/app/data` volume for student accounts) and `compose.yaml`.
+
+On the VM (any Linux with podman ≥ 4.1; rootless is fine since 5057 > 1024):
+```bash
+# one-time: install podman + git (RHEL-family shown; apt install podman git on Debian-family)
+sudo dnf install -y podman git
+git clone <repo-url> ipmat && cd ipmat
+
+# build + start (detached, auto-restarts, health-checked)
+podman compose up -d --build
+# (older podman without compose: podman-compose up -d --build)
+
+# check it
+podman compose ps
+curl http://localhost:5057/api/health
+```
+Then open `http://<VM-IP>:5057` (admin) or `http://<VM-IP>:5057/public/landing.html`
+(student side). If the page doesn't load, open the port: cloud security group /
+`sudo firewall-cmd --add-port=5057/tcp --permanent && sudo firewall-cmd --reload`.
+
+Day-to-day:
+- logs: `podman compose logs -f web`
+- update: `git pull && podman compose up -d --build` (student accounts survive in the `ipmat-data` volume; papers/bank follow the image)
+- stop: `podman compose down` (add `-v` to also wipe student data)
+- local run without compose: `podman build -f Containerfile -t ipmat-stage . && podman run -d --name ipmat -p 5057:5057 -v ipmat-data:/app/data ipmat-stage`
+
+Notes: host/port come from `IPMAT_HOST`/`IPMAT_PORT` env (default `127.0.0.1:5057`
+locally, `0.0.0.0:5057` in the container). `app/llm.config.json` is never baked
+into the image — to test LLM features on stage, mount it read-only (see the
+commented line in `compose.yaml`). This is HTTP-only staging; put a reverse
+proxy with TLS in front before any real student traffic.

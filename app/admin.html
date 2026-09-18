@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" onclick="goGuide()" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -167,11 +167,7 @@ const $=id=>document.getElementById(id);
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
-  b.classList.add("on");$("t-"+b.dataset.t).classList.add("on");});
-function goGuide(){document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
-  $("t-guide").classList.add("on");
-  window.scrollTo(0,0);}
+  b.classList.add("on");$("t-"+b.dataset.t).classList.add("on");window.scrollTo(0,0);});
 let TAX={};
 async function loadTopics(){const{st,j}=await api("GET","/api/topics");if(st!==200)return;
   TAX=j.taxonomy;

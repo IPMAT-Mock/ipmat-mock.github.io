@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IPMAT Admin</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#222;--soft:#6b6259;--line:#e5ded2;--accent:#7c2d12;--ok:#1c6b3a;--err:#a12323}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,sans-serif}
+header{background:#1f1b16;color:#f6f4ef;padding:14px 22px;display:flex;gap:16px;align-items:center}
+header h1{font-size:18px;margin:0}header a{color:#e8c87a;font-size:13px}
+nav{display:flex;gap:6px;padding:10px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0}
+nav button{border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+nav button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:1080px;margin:0 auto;padding:20px 22px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:17px}h3{margin:14px 0 8px;font-size:15px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#faf7f1}tr:nth-child(even) td{background:#fcfaf6}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+label{font-size:13px;color:var(--soft)}input,select,textarea{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff}
+textarea{width:100%;font-family:ui-monospace,monospace;font-size:12.5px}
+button.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:14px}
+button.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+.ok{color:var(--ok);font-weight:700}.err{color:var(--err);font-weight:700}.muted{color:var(--soft);font-size:13px}
+.tab{display:none}.tab.on{display:block}
+pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:auto;font-size:12.5px;max-height:300px}
+.stem{max-width:560px}
+</style>
+</head>
+<body>
+<header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
+<a href="/../public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
+<nav id="tabs">
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
+</nav>
+<main>
+<section class="tab on" id="t-dash">
+  <div class="card"><h2>Bank coverage <span class="muted" id="bankTotal"></span></h2><div id="stats"></div></div>
+  <div class="card"><h2>Published papers</h2><div id="papers"></div></div>
+</section>
+<section class="tab" id="t-bank">
+  <div class="card"><h2>Browse bank</h2>
+    <div class="row">
+      <label>Section <select id="fSec"><option value="">all</option><option>QA</option><option>LR</option><option>VARC</option></select></label>
+      <label>Topic <input id="fTopic" placeholder="e.g. Arithmetic" size="18"></label>
+      <label>Difficulty <select id="fDiff"><option value="">all</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
+      <label>Search <input id="fQ" placeholder="stem or qid" size="20"></label>
+      <button class="btn" onclick="loadBank()">Filter</button>
+    </div><div id="bankOut"></div></div>
+  <div class="card"><h2>Add question</h2>
+    <p class="muted">Paste one v2 question JSON. <button class="ghost btn" onclick="fillTemplate()">Insert template</button></p>
+    <textarea id="newQ" rows="12" placeholder='{"qid": "...", ...}'></textarea>
+    <div class="row"><button class="btn" onclick="addQ()">Validate &amp; append to bank</button><span id="addMsg"></span></div></div>
+</section>
+<section class="tab" id="t-wizard">
+  <div class="card"><h2>New paper</h2>
+    <div class="row">
+      <label>Exam kind <select id="wKind"><option value="full_mock">Mock</option><option value="simulation">Simulation (strict, review-after-submit)</option><option value="practice">Practice</option></select></label>
+      <label>Source <select id="wSrc" onchange="srcFlip()"><option value="blueprint">Saved blueprint</option><option value="custom">Custom spec</option></select></label>
+      <label>Title <input id="wTitle" size="24" value="IPMAT Custom Paper"></label>
+      <label>Seed <input id="wSeed" size="6" value="42"></label>
+    </div>
+    <div id="wBpRow" class="row"><label>Blueprint <select id="wBp"></select></label></div>
+    <div id="wCustom" style="display:none">
+      <h3>Sections (topic mode: whole-section mix or single topic)</h3>
+      <div id="wSecs"></div>
+      <div class="row"><button class="ghost btn" onclick="addSec()">+ section</button>
+      <label>Difficulties <span id="wDiffs"><label><input type="checkbox" value="Easy" checked> Easy</label> <label><input type="checkbox" value="Medium" checked> Medium</label> <label><input type="checkbox" value="Hard" checked> Hard</label></span></label></div>
+    </div>
+    <div class="row"><button class="btn" onclick="assemble()">Assemble (preview)</button><span id="asmMsg"></span></div>
+    <div id="asmOut"></div></div>
+</section>
+<section class="tab" id="t-llm">
+  <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>
+    <div id="llmStat"></div>
+    <div class="row">
+      <label>Section <select id="lSec"><option value="qa">QA</option><option value="lr">LR</option><option value="varc">VARC</option></select></label>
+      <label>Count <input id="lN" size="4" value="5"></label>
+      <label>Difficulty <select id="lDiff"><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
+      <label>Topic mix <input id="lMix" size="30" value="blueprint mix"></label>
+      <label><input type="checkbox" id="lSave"> save valid to bank</label>
+      <button class="btn" onclick="llmGen()">Generate</button>
+    </div><div id="llmOut"></div></div>
+</section>
+<section class="tab" id="t-cfg">
+  <div class="card"><h2>Exam config <span class="muted">config/exam.config.json — marking locked to +3/−1/0</span></h2>
+    <div class="row"><label>Total time (sec) <input id="cTime" size="8"></label></div>
+    <div id="cSecs"></div>
+    <div class="row"><button class="btn" onclick="saveCfg()">Save config</button><span id="cfgMsg"></span></div></div>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");$("t-"+b.dataset.t).classList.add("on");});
+const BUCKETS={QA:["Arithmetic","Algebra","ModernMath_Geometry","DataInterpretation"],LR:["Arrangements","Series_Coding","CriticalReasoning"],VARC:["ReadingComprehension","VerbalLogic","Grammar","Vocabulary"]};
+async function api(m,u,b){const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));return{st:r.status,j};}
+async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)return;
+  $("bankTotal").textContent="· "+j.bank_questions+" questions";
+  let h="<table><tr><th>Section</th><th>Bucket</th><th>Easy</th><th>Medium</th><th>Hard</th><th>Total</th></tr>";
+  for(const s of Object.keys(j.stats))for(const b of Object.keys(j.stats[s])){const d=j.stats[s][b];
+    h+=`<tr><td>${s}</td><td>${b}</td><td>${d.Easy||0}</td><td>${d.Medium||0}</td><td>${d.Hard||0}</td><td>${(d.Easy||0)+(d.Medium||0)+(d.Hard||0)}</td></tr>`;}
+  $("stats").innerHTML=h+"</table>";
+  const p=await api("GET","/api/papers");
+  $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><a href="/../public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
+  const bp=await api("GET","/api/blueprints");
+  $("wBp").innerHTML=(bp.j.blueprints||[]).map(b=>`<option value="${b.file}">${b.title||b.file}</option>`).join("");
+  llmStat();}
+async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
+  const{st,j}=await api("GET","/api/bank?"+q);
+  $("bankOut").innerHTML=`<p class="muted">${j.count} match</p><table><tr><th>qid</th><th>sec</th><th>topic</th><th>diff</th><th>stem</th><th>ans</th></tr>`+
+   j.questions.map(x=>`<tr><td>${x.qid}</td><td>${x.section}</td><td>${x.topic}</td><td>${x.difficulty}</td><td class="stem">${(x.stem||"").slice(0,140)}</td><td>${"ABCD"[x.answer_index]}</td></tr>`).join("")+"</table";}
+function fillTemplate(){$("newQ").value=JSON.stringify({qid:"QA-ARITH-014",section:"QA",topic:"Arithmetic",subtopic:"Percentages",difficulty:"Easy",marks:{correct:3,wrong:-1,skipped:0},time_sec:90,stem:"",options:["","","",""],answer_index:0,hint:"",solution:""},null,1);}
+async function addQ(){let q;try{q=JSON.parse($("newQ").value);}catch(e){$("addMsg").innerHTML='<span class="err">bad JSON</span>';return;}
+  const{st,j}=await api("POST","/api/bank",q);
+  $("addMsg").innerHTML=st===200?`<span class="ok">saved ${j.qid} → ${j.file}</span>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
+  if(st===200)dash();}
+function srcFlip(){const c=$("wSrc").value==="custom";$("wCustom").style.display=c?"block":"none";$("wBpRow").style.display=c?"none":"flex";
+  if(c&&!$("wSecs").children.length){addSec("QA",30);addSec("LR",15);addSec("VARC",15);}}
+function addSec(code="QA",count=10){const d=document.createElement("div");d.className="row";
+  d.innerHTML=`<select class="sCode" onchange="secFlip(this)"><option>QA</option><option>LR</option><option>VARC</option></select>
+  <label>count <input class="sCount" size="4" value="${count}"></label>
+  <select class="sMode"><option value="mix">section mix</option><option value="single">single topic</option></select>
+  <select class="sTopic"></select>`;
+  d.querySelector(".sCode").value=code;$("wSecs").appendChild(d);secFlip(d.querySelector(".sCode"));}
+function secFlip(sel){const row=sel.closest(".row"),sec=sel.value,mode=row.querySelector(".sMode").value;
+  row.querySelector(".sTopic").innerHTML=BUCKETS[sec].map(b=>`<option>${b}</option>`).join("");
+  row.querySelector(".sTopic").style.display=mode==="single"?"":"none";}
+document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("sMode"))secFlip(e.target.closest(".row").querySelector(".sCode"));});
+let lastPaper=null;
+async function assemble(){const body={kind:$("wKind").value,title:$("wTitle").value,seed:parseInt($("wSeed").value||"42")};
+  if($("wSrc").value==="blueprint"){body.blueprint=$("wBp").value;}
+  else{body.time_sec=$("wKind").value==="practice"?1800:8100;
+    body.difficulties=[...document.querySelectorAll("#wDiffs input:checked")].map(x=>x.value);
+    body.sections=[...$("wSecs").children].map(r=>{const code=r.querySelector(".sCode").value,count=parseInt(r.querySelector(".sCount").value||"0");
+      const o={code,count};
+      if(r.querySelector(".sMode").value==="single"){const t=r.querySelector(".sTopic").value;o.mix={[t]:count};}
+      return o;});}
+  const{st,j}=await api("POST","/api/assemble",body);
+  if(st!==200){$("asmOut").innerHTML=`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;lastPaper=null;return;}
+  lastPaper=j.paper;
+  const c={};j.paper.questions.forEach(q=>{c[q.section]=c[q.section]||{};const b=q.topic;c[q.section][b]=(c[q.section][b]||0)+1;});
+  const dc={};j.paper.questions.forEach(q=>dc[q.difficulty]=(dc[q.difficulty]||0)+1);
+  $("asmMsg").innerHTML='<span class="ok">assembled</span>';
+  $("asmOut").innerHTML=`<h3>Preview: ${j.paper.title} (${j.paper.questions.length}Q)</h3>
+   <pre>${JSON.stringify({mix:c,difficulty:dc,warnings:j.warnings},null,1)}</pre>
+   <div class="row"><button class="btn" onclick="publish()">Publish to runner</button><span id="pubMsg"></span></div>`;}
+async function publish(){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
+  lastPaper.paper_id=(lastPaper.paper_id||"IPMAT-CUSTOM")+(lastPaper.kind==="simulation"?"-SIM":"");
+  const{st,j}=await api("POST","/api/papers/publish",{paper:lastPaper});
+  $("pubMsg").innerHTML=st===200?`<span class="ok">published</span> <a href="/../public/index.html?paper=${encodeURIComponent(j.entry.id)}" target="_blank">Open in runner ↗</a>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
+  if(st===200)dash();}
+async function llmStat(){const{st,j}=await api("GET","/api/llm/status");
+  $("llmStat").innerHTML=st===200?`<p class="${j.enabled?"ok":"muted"}">${j.enabled?`enabled · ${j.provider} · ${j.model||"no model set"} · key ${j.has_key?"present":"MISSING"}`:"disabled — set enabled=true in app/llm.config.json to use"}</p>`:"";}
+async function llmGen(){const{st,j}=await api("POST","/api/llm/generate",{section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked});
+  $("llmOut").innerHTML=st===200||j.questions?`${(j.errors||[]).map(e=>`<p class="err">${e}</p>`).join("")}<p class="${j.ok?"ok":"err"}">${(j.questions||[]).length} questions parsed${j.saved&&j.saved.length?`, saved: ${j.saved.join(", ")}`:""}</p><pre>${JSON.stringify(j.questions||[],null,1).slice(0,6000)}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;
+  if(j.saved&&j.saved.length)dash();}
+async function loadCfg(){const{st,j}=await api("GET","/api/config");$("cTime").value=j.time_sec;
+  $("cSecs").innerHTML=j.sections.map(s=>`<div class="row"><b>${s.code}</b><label>count <input data-sec="${s.code}" size="4" value="${s.count}"></label></div>`).join("");}
+async function saveCfg(){const body={time_sec:parseInt($("cTime").value||"8100"),marking:{correct:3,wrong:-1,skipped:0},answer_balance_tolerance:2,
+  sections:[...document.querySelectorAll("#cSecs input")].map(i=>({code:i.dataset.sec,count:parseInt(i.value||"0")}))};
+  const{st,j}=await api("POST","/api/config",body);
+  $("cfgMsg").innerHTML=st===200?'<span class="ok">saved</span>':`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;}
+dash();loadBank();loadCfg();
+</script>
+</body>
+</html>

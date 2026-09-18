@@ -1,0 +1,1 @@
+{"answer_balance_tolerance": 2, "marking": {"correct": 3, "skipped": 0, "wrong": -1}, "sections": [{"code": "QA", "count": 30}, {"code": "LR", "count": 15}, {"code": "VARC", "count": 15}], "time_sec": 8100}

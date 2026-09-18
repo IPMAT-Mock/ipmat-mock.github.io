@@ -1,0 +1,20 @@
+{
+  "papers": [
+    {
+      "file": "mock-01.json",
+      "id": "IPMAT-MOCK-60Q",
+      "kind": "full_mock",
+      "questions": 60,
+      "time_sec": 8100,
+      "title": "IPMAT Full Mock (IIMB pattern)"
+    },
+    {
+      "file": "practice-15q.json",
+      "id": "IPMAT-PRACTICE-15Q",
+      "kind": "practice",
+      "questions": 15,
+      "time_sec": 1800,
+      "title": "IPMAT Practice Set (15Q)"
+    }
+  ]
+}

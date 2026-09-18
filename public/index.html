@@ -213,12 +213,13 @@ kbd{font:600 12px ui-monospace,monospace;background:var(--panel-2);border:1px so
       <div class="loader" id="loader">
         <div style="font-weight:700;font-size:14px">Question set</div>
         <div class="row">
+          <select id="paperSel" class="btn hide" title="Choose a published paper"></select>
           <button class="btn" id="loadBtn">Choose JSON file…</button>
           <input type="file" id="fileInput" accept=".json">
           <span class="status" id="loadStatus"><span class="dot default"></span> Loading…</span>
         </div>
         <div style="font-size:12.5px;color:var(--ink-soft)">
-          Auto-loads <code>papers/mock-01.json</code> (v2: +3/−1, 60Q) from the same folder when present. Custom JSON needs per question: <code>stem</code>, <code>options</code> (4), <code>answer</code> or <code>answer_index</code> (index). Optional: <code>scenario</code> (topic), <code>domain</code>, <code>task</code>, <code>difficulty</code>, <code>explanation</code>, <code>id</code>.
+          Published papers load from <code>papers/index.json</code> — pick one above, or deep-link with <code>?paper=&lt;id|file&gt;</code>. Custom JSON needs per question: <code>stem</code>, <code>options</code> (4), <code>answer</code> or <code>answer_index</code> (index). Optional: <code>scenario</code> (topic), <code>domain</code>, <code>task</code>, <code>difficulty</code>, <code>explanation</code>, <code>id</code>.
         </div>
         <div class="row hide" id="resetRow">
           <button class="btn ghost" id="resetBtn">↻ Reset to auto-loaded set</button>
@@ -301,6 +302,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
 (function(){
   "use strict";
   var CUSTOM_KEY = "ipmat_custom_exam_data";
+  var MANIFEST = "papers/index.json";
   var SIDECAR = "papers/mock-01.json";
   var SIDECAR_LEGACY = "ipmat_30q_comprehensive.json";
   var defaultD = window.EXAM_DATA;
@@ -376,7 +378,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     el("examTitle").textContent=D.title||"IPMAT Mock";
     el("examSub").textContent=D.subtitle||"Practice Exam";
     el("brandKind").textContent=D.title||"Practice Mock";
-    el("examNote").innerHTML=D.note||"IPMAT marking: <b>+3</b> correct, <b>−1</b> wrong, <b>0</b> skipped.";
+    el("examNote").innerHTML=(D.note||"IPMAT marking: <b>+3</b> correct, <b>−1</b> wrong, <b>0</b> skipped.")+(isSim()?" <b>Simulation:</b> strict timer (no pauses), no hints — solutions unlock after submit.":"");
     var mins=Math.round((D.timeLimitSec||3600)/60);
     var facts=[[String(Q.length),"Questions"],[mins+" min","Time limit"],["+3 / −1","IPMAT marking"],[String(maxOptions())+" options","One correct"]];
     el("facts").innerHTML=facts.map(function(f){return '<div class="fact"><b>'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></div>';}).join("");
@@ -395,29 +397,66 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
       s.innerHTML='<span class="dot custom"></span> Auto-loaded: <b>'+esc(D.title||"IPMAT set")+'</b> ('+Q.length+' Q)';
       r.classList.add("hide");
     } else {
-      s.innerHTML='<span class="dot default"></span> Using demo set ('+Q.length+' Q) — assemble papers/mock-01.json for the full 60Q mock';
+      s.innerHTML='<span class="dot default"></span> Using demo set ('+Q.length+' Q) — pick a published paper above';
       r.classList.add("hide");
     }
   }
 
+  // Published-paper loading: manifest picker (?paper=<id|file>) → sidecar fallbacks.
+  function paperParam(){ try{ var m=/[?&]paper=([^&]+)/.exec(location.search||""); return m?decodeURIComponent(m[1]):null; }catch(e){ return null; } }
+  function isSim(){ return !!(D && D.kind==="simulation"); }
+  function enforceKind(){
+    // Simulation = exam-hall behavior: exam mode only, strict timer, no pauses.
+    if(isSim()){
+      Array.prototype.forEach.call(document.querySelectorAll('.modeopt[data-mode="study"]'),function(x){x.classList.add("hide");});
+      chosenMode="exam";
+      Array.prototype.forEach.call(document.querySelectorAll(".modeopt"),function(x){x.classList.toggle("sel",x.getAttribute("data-mode")==="exam");});
+    }
+  }
+  function applyPaper(data){
+    var err=validateSet(data);
+    if(err) throw new Error(err);
+    D=normD(data); Q=D.questions; state=load()||fresh();
+    if(!state.remaining) state.remaining=D.timeLimitSec;
+    enforceKind();
+    paintStart();
+    if(state.submitted){ showResults(); }
+    else if(state.started && !state.submitted){ el("resumeBtn").classList.remove("hide"); }
+  }
+  function fetchPaper(url, fallback){
+    fetch(url, {cache:"no-store"}).then(function(res){
+      if(!res.ok) throw new Error("no paper at "+url);
+      return res.json();
+    }).then(applyPaper).catch(function(){
+      if(fallback&&fallback.length){ fetchPaper(fallback[0], fallback.slice(1)); }
+      else { paintStart(); }
+    });
+  }
   // Auto-load assembled paper (v2) or legacy sidecar JSON from same folder (unless a custom file was chosen)
   function loadSidecar(urls){
     if(!urls.length){ paintStart(); return; }
-    fetch(urls[0], {cache:"no-store"}).then(function(res){
-      if(!res.ok) throw new Error("no sidecar");
+    fetchPaper(urls[0], urls.slice(1));
+  }
+  function loadFromManifest(){
+    fetch(MANIFEST, {cache:"no-store"}).then(function(res){
+      if(!res.ok) throw new Error("no manifest");
       return res.json();
-    }).then(function(data){
-      var err=validateSet(data);
-      if(err) throw new Error(err);
-      D=normD(data); Q=D.questions; state=load()||fresh();
-      if(!state.remaining) state.remaining=D.timeLimitSec;
-      paintStart();
-      if(state.submitted){ showResults(); }
-      else if(state.started && !state.submitted){ el("resumeBtn").classList.remove("hide"); }
-    }).catch(function(){ loadSidecar(urls.slice(1)); });
+    }).then(function(m){
+      var papers=(m&&m.papers)||[];
+      var sel=el("paperSel");
+      if(papers.length && sel){
+        sel.innerHTML=papers.map(function(p){return '<option value="'+esc(p.file)+'">'+esc(p.title+' ('+p.questions+'Q · '+p.kind+')')+'</option>';}).join("");
+        var want=paperParam(), idx=0;
+        if(want){ papers.forEach(function(p,i){ if(p.file===want||p.id===want) idx=i; }); }
+        sel.selectedIndex=idx;
+        sel.onchange=function(){ reset(); fetchPaper("papers/"+sel.value, []); };
+        sel.classList.remove("hide");
+        fetchPaper("papers/"+papers[idx].file, [SIDECAR, SIDECAR_LEGACY]);
+      } else { loadSidecar([SIDECAR, SIDECAR_LEGACY]); }
+    }).catch(function(){ loadSidecar([SIDECAR, SIDECAR_LEGACY]); });
   }
   if(!isCustom){
-    loadSidecar([SIDECAR, SIDECAR_LEGACY]);
+    loadFromManifest();
   }
   paintStart();
 
@@ -452,12 +491,12 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
   // ---------- exam ----------
   function isStudy(){ return state.mode==="study"; }
   function isChecked(id){ return !!state.checked[id]; }
-  function isPaused(){ return isStudy() && isChecked(Q[state.cur].id); }
+  function isPaused(){ return !isSim() && isStudy() && isChecked(Q[state.cur].id); }
 
   function enterExam(){
     startScreen.classList.add("hide"); resultScreen.classList.add("hide"); examScreen.classList.remove("hide");
     progWrap.classList.remove("hide"); timerEl.classList.remove("hide");
-    var mt=el("modeTag"); mt.classList.remove("hide"); mt.textContent=isStudy()?"📖 Study mode · +3/−1 on submit":"📝 Exam mode · +3/−1";
+    var mt=el("modeTag"); mt.classList.remove("hide"); mt.textContent=isSim()?"🏛 Simulation · strict · +3/−1":(isStudy()?"📖 Study mode · +3/−1 on submit":"📝 Exam mode · +3/−1");
     buildLegend(); buildPalette(); renderQ(); startTimer();
     window.scrollTo(0,0);
   }

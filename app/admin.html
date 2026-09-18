@@ -101,8 +101,11 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <label>Difficulty <select id="lDiff"><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
       <label>Topic mix <input id="lMix" size="30" value="blueprint mix"></label>
       <label><input type="checkbox" id="lSave"> save valid to bank</label>
+      <button class="ghost btn" onclick="llmPreview()" title="Show the exact system + user prompts that will be sent — no LLM call is made.">Preview exact prompt</button>
       <button class="btn" onclick="llmGen()">Generate</button>
-    </div><div id="llmOut"></div></div>
+    </div>
+    <details id="lPromptBox" style="margin:8px 0"><summary class="muted">Exact prompts sent to the LLM (system + user) — click to expand</summary><div id="lPrompt"></div></details>
+    <div id="llmOut"></div></div>
 </section>
 <section class="tab" id="t-cfg">
   <div class="card"><h2>Exam config <span class="muted">config/exam.config.json — marking locked to +3/−1/0</span></h2>
@@ -203,7 +206,12 @@ async function publish(){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
   if(st===200)dash();}
 async function llmStat(){const{st,j}=await api("GET","/api/llm/status");
   $("llmStat").innerHTML=st===200?`<p class="${j.enabled?"ok":"muted"}">${j.enabled?`enabled · ${j.provider} · ${j.model||"no model set"} · key ${j.has_key?"present":"MISSING"}`:"disabled — set enabled=true in app/llm.config.json to use"}</p>`:"";}
-async function llmGen(){const{st,j}=await api("POST","/api/llm/generate",{section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked});
+function llmParams(){return new URLSearchParams({section:$("lSec").value,count:$("lN").value||"5",difficulty:$("lDiff").value,topic_mix:$("lMix").value});}
+async function llmPreview(){const{st,j}=await api("GET","/api/llm/prompt?"+llmParams());
+  $("lPromptBox").open=true;
+  $("lPrompt").innerHTML=st===200?`<h3>System prompt <span class="muted">(prompts/generator-system.md)</span></h3><pre>${j.system.replace(/</g,"&lt;")}</pre><h3>User prompt <span class="muted">(prompts/${$("lSec").value}-batch.md, [N]/[DIFFICULTY]/[TOPIC-MIX] substituted)</span></h3><pre>${j.user.replace(/</g,"&lt;")}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;}
+async function llmGen(){await llmPreview();
+  const{st,j}=await api("POST","/api/llm/generate",{section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked});
   $("llmOut").innerHTML=st===200||j.questions?`${(j.errors||[]).map(e=>`<p class="err">${e}</p>`).join("")}<p class="${j.ok?"ok":"err"}">${(j.questions||[]).length} questions parsed${j.saved&&j.saved.length?`, saved: ${j.saved.join(", ")}`:""}</p><pre>${JSON.stringify(j.questions||[],null,1).slice(0,6000)}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;
   if(j.saved&&j.saved.length)dash();}
 async function loadCfg(){const{st,j}=await api("GET","/api/config");$("cTime").value=j.time_sec;

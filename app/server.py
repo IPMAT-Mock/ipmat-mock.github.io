@@ -386,6 +386,41 @@ def llm_status():
                     "has_key": bool(cfg.get("api_key"))})
 
 
+def _build_llm_prompt(section, n, difficulty, topic_mix):
+    """Build the EXACT (system, user) prompts sent to the LLM.
+
+    Single source of truth: preview endpoint and generate endpoint both use
+    this, so what you see in the UI is byte-identical to what is sent.
+    """
+    section = (section or "qa").lower()
+    if section not in ("qa", "lr", "varc"):
+        return None, None, "bad section (use qa, lr, varc)"
+    prompt_file = ROOT / "prompts" / f"{section}-batch.md"
+    system_file = ROOT / "prompts" / "generator-system.md"
+    try:
+        tmpl = prompt_file.read_text(encoding="utf-8")
+        system = system_file.read_text(encoding="utf-8")
+    except Exception as e:
+        return None, None, f"prompt files missing: {e}"
+    user = (tmpl.replace("[N]", str(n))
+                 .replace("[DIFFICULTY]", difficulty or "Mixed")
+                 .replace("[TOPIC-MIX]", topic_mix or "blueprint mix"))
+    return system, user, None
+
+
+@app.get("/api/llm/prompt")
+def llm_prompt():
+    """Preview the exact prompts that generate would send (no LLM call)."""
+    system, user, err = _build_llm_prompt(
+        request.args.get("section", "qa"),
+        int(request.args.get("count", 5) or 5),
+        request.args.get("difficulty", "Mixed"),
+        request.args.get("topic_mix", "blueprint mix"))
+    if err:
+        return jsonify({"ok": False, "errors": [err]}), 422
+    return jsonify({"ok": True, "system": system, "user": user})
+
+
 @app.post("/api/llm/generate")
 def llm_generate():
     cfg = _llm_config()
@@ -397,23 +432,18 @@ def llm_generate():
     if section not in ("qa", "lr", "varc"):
         return jsonify({"ok": False, "errors": ["bad section"]}), 422
     n = int(body.get("count", 5))
-    prompt_file = ROOT / "prompts" / f"{section}-batch.md"
-    system_file = ROOT / "prompts" / "generator-system.md"
-    try:
-        tmpl = prompt_file.read_text(encoding="utf-8")
-        system = system_file.read_text(encoding="utf-8")
-    except Exception as e:
-        return jsonify({"ok": False, "errors": [f"prompt files missing: {e}"]}), 500
-    prompt = (tmpl.replace("[N]", str(n))
-                   .replace("[DIFFICULTY]", body.get("difficulty", "Mixed"))
-                   .replace("[TOPIC-MIX]", body.get("topic_mix", "blueprint mix")))
+    system, user, err = _build_llm_prompt(
+        section, n, body.get("difficulty", "Mixed"),
+        body.get("topic_mix", "blueprint mix"))
+    if err:
+        return jsonify({"ok": False, "errors": [err]}), 500
     import requests
     try:
         r = requests.post(cfg["base_url"].rstrip("/") + "/chat/completions",
                           headers={"Authorization": f"Bearer {cfg.get('api_key', '')}"},
                           json={"model": cfg.get("model"),
                                 "messages": [{"role": "system", "content": system},
-                                             {"role": "user", "content": prompt}]},
+                                             {"role": "user", "content": user}]},
                           timeout=120)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"]["content"]
@@ -433,7 +463,8 @@ def llm_generate():
                 f.write(json.dumps(x, ensure_ascii=False) + "\n")
                 saved.append(x.get("qid"))
     return jsonify({"ok": not errs, "questions": questions, "errors": errs,
-                    "saved": saved, "raw": text[:4000]})
+                    "saved": saved, "raw": text[:4000],
+                    "sent": {"system": system, "user": user}})
 
 
 def _extract_questions(text):

@@ -42,7 +42,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </nav>
 <main>
 <section class="tab on" id="t-dash">
-  <p class="hint"><b>Dashboard</b> — read-only overview. The coverage table shows how many bank questions exist per topic bucket and difficulty; use it to judge whether a paper spec is feasible <em>before</em> assembling. Published papers open directly in the test runner.</p>
+  <p class="hint"><b>Dashboard</b> — read-only overview. The coverage table shows how many bank questions exist per topic bucket and difficulty; <b>click any count to drill into those exact questions</b> (jumps to the Questions tab pre-filtered). Use it to judge whether a paper spec is feasible <em>before</em> assembling. Published papers open directly in the test runner.</p>
   <div class="card"><h2>Bank coverage <span class="muted" id="bankTotal"></span></h2><div id="stats"></div></div>
   <div class="card"><h2>Published papers</h2><div id="papers"></div></div>
 </section>
@@ -68,7 +68,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
   <div class="card"><h2>Admin app user guide — every area, end to end</h2>
     <p class="hint">This one guide covers the <b>whole admin app</b>: Dashboard · Questions · Topics · New paper · LLM loop · Config. Open it anytime via the <b>📖 Guide</b> button at the right corner of the menu above. Nothing here needs AI unless explicitly stated.</p>
     <h3 id="g-dash">Dashboard — read-only overview</h3>
-    <p class="hint"><b>Bank coverage</b> shows question counts per topic bucket × difficulty — check it <em>before</em> assembling to judge whether your spec is feasible. <b>Published papers</b> lists everything shipped to the runner, each with an <b>Open ↗</b> link that loads it directly via <code>?paper=&lt;id&gt;</code>.</p>
+    <p class="hint"><b>Bank coverage</b> shows question counts per topic bucket × difficulty — click any count to drill into those questions (Questions tab opens pre-filtered) — check it <em>before</em> assembling to judge whether your spec is feasible. <b>Published papers</b> lists everything shipped to the runner, each with an <b>Open ↗</b> link that loads it directly via <code>?paper=&lt;id&gt;</code>.</p>
     <h3 id="g-pipeline">How papers are made — no AI needed</h3>
     <p class="hint">Paper generation is <b>deterministic curation</b> from your validated question bank. The LLM tab is purely an <em>optional authoring aid</em> for writing new questions — assembly itself never calls any AI.</p>
     <h3>The 5-step pipeline</h3>
@@ -329,13 +329,18 @@ function bpUse(file){lastBpFile=file||$("bFile").value.trim()||lastBpFile;
 async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)return;
   $("bankTotal").textContent="· "+j.bank_questions+" questions";
   let h="<table><tr><th>Section</th><th>Bucket</th><th>Easy</th><th>Medium</th><th>Hard</th><th>Total</th></tr>";
+  const cell=(s,b,d,n)=>n?`<a href="#" title="Drill into these ${n} question(s) in the Questions tab" onclick="drillCov('${s}','${b}','${d}');return false"><b>${n}</b></a>`:"0";
   for(const s of Object.keys(j.stats))for(const b of Object.keys(j.stats[s])){const d=j.stats[s][b];
-    h+=`<tr><td>${secPill(s)}</td><td>${b}</td><td>${d.Easy||0}</td><td>${d.Medium||0}</td><td>${d.Hard||0}</td><td>${(d.Easy||0)+(d.Medium||0)+(d.Hard||0)}</td></tr>`;}
+    h+=`<tr><td>${secPill(s)}</td><td>${b}</td><td>${cell(s,b,"Easy",d.Easy||0)}</td><td>${cell(s,b,"Medium",d.Medium||0)}</td><td>${cell(s,b,"Hard",d.Hard||0)}</td><td>${cell(s,b,"",((d.Easy||0)+(d.Medium||0)+(d.Hard||0)))}</td></tr>`;}
   $("stats").innerHTML=h+"</table>";
   const p=await api("GET","/api/papers");
   $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><button class="ghost btn" onclick="gotoPapers('${e.id}')">details →</button><a href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
   await loadBlueprints();
   llmStat();}
+function drillCov(sec,bucket,diff){document.querySelector('#tabs button[data-t="bank"]').click();
+  $("fSec").value=sec;$("fTopic").value=bucket;$("fDiff").value=diff||"";
+  $("fSub").value="";$("fQ").value="";$("fUse").value="";
+  loadBank();}
 async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),subtopic:$("fSub").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
   const[bu,bk]=await Promise.all([api("GET","/api/usage"),api("GET","/api/bank?"+q)]);
   const{st,j}=bk;window._usage=(bu.j&&bu.j.usage)||{};

@@ -100,7 +100,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <h3 id="g-topics">Topics tab — managing the taxonomy</h3>
     <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. Edit <b>label / subtopics / aliases</b> inline and <b>Save</b> (aliases let old topic names keep resolving). <b>Rename</b> migrates bank questions + blueprint mixes automatically and reports counts. <b>Delete</b> is blocked with exact usage while questions or blueprints reference the bucket. An <b>unmapped topics</b> alert flags any bank question matching no bucket — fix by adding an alias or correcting the question. Changes apply to assembly immediately.</p>
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
-    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code> plus an OpenAI-compatible endpoint, model and key (keys never leave that local file). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
+    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
     <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p></div>
 </section>
@@ -140,9 +140,10 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-llm">
   <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>
-    <p class="hint"><b>Generate</b> sends a section batch prompt (from <code>prompts/</code>) to your configured LLM, parses the returned questions and validates them against the schema. Tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Only schema-valid questions are ever saved. Requires <code>enabled:true</code> plus an OpenAI-compatible endpoint, model and API key in <code>app/llm.config.json</code> — keys never leave that local file.</p>
+    <p class="hint"><b>Generate</b> sends a section batch prompt (from <code>prompts/</code>) to your chosen provider, parses the returned questions and validates them against the schema. Tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Only schema-valid questions are ever saved. Requires <code>enabled:true</code> in <code>app/llm.config.json</code> plus, per provider: <b>OpenAI-compatible</b> → endpoint + model + API key; <b>Gemini</b> → model + API key only (get one at <code>aistudio.google.com/apikey</code>). Keys never leave that local file.</p>
     <div id="llmStat"></div>
     <div class="row">
+      <label title="Which configured provider to call. Missing keys are flagged above.">Provider <span class="q">?</span> <select id="lProv"><option value="openai">OpenAI-compatible</option><option value="gemini">Gemini</option></select></label>
       <label>Section <select id="lSec"><option value="qa">QA</option><option value="lr">LR</option><option value="varc">VARC</option></select></label>
       <label>Count <input id="lN" size="4" value="5"></label>
       <label>Difficulty <select id="lDiff"><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
@@ -257,13 +258,18 @@ async function publish(){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
   $("pubMsg").innerHTML=st===200?`<span class="ok">published</span> <a href="/public/index.html?paper=${encodeURIComponent(j.entry.id)}" target="_blank">Open in runner ↗</a>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
   if(st===200)dash();}
 async function llmStat(){const{st,j}=await api("GET","/api/llm/status");
-  $("llmStat").innerHTML=st===200?`<p class="${j.enabled?"ok":"muted"}">${j.enabled?`enabled · ${j.provider} · ${j.model||"no model set"} · key ${j.has_key?"present":"MISSING"}`:"disabled — set enabled=true in app/llm.config.json to use"}</p>`:"";}
+  if(st!==200)return;
+  const provs=j.providers||{};
+  const line=Object.keys(provs).map(p=>`${p}: ${provs[p].model||"no model"} · key ${provs[p].has_key?"present":"MISSING"}${p==="openai"&&provs[p].base_url?` · ${provs[p].base_url}`:""}`).join(" | ");
+  $("llmStat").innerHTML=`<p class="${j.enabled?"ok":"muted"}">${j.enabled?`enabled · default ${j.provider} — ${line}`:"disabled — set enabled=true in app/llm.config.json to use"}</p>`;
+  if(j.provider)$("lProv").value=j.provider;}
 function llmParams(){return new URLSearchParams({section:$("lSec").value,count:$("lN").value||"5",difficulty:$("lDiff").value,topic_mix:$("lMix").value});}
 async function llmPreview(){const{st,j}=await api("GET","/api/llm/prompt?"+llmParams());
   $("lPromptBox").open=true;
   $("lPrompt").innerHTML=st===200?`<h3>System prompt <span class="muted">(prompts/generator-system.md)</span></h3><pre>${j.system.replace(/</g,"&lt;")}</pre><h3>User prompt <span class="muted">(prompts/${$("lSec").value}-batch.md, [N]/[DIFFICULTY]/[TOPIC-MIX] substituted)</span></h3><pre>${j.user.replace(/</g,"&lt;")}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;}
 async function llmGen(){await llmPreview();
-  const{st,j}=await api("POST","/api/llm/generate",{section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked});
+  const{st,j}=await api("POST","/api/llm/generate",{provider:$("lProv").value,section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked});
+  $("llmOut").innerHTML=st===200||j.questions?`${(j.errors||[]).map(e=>`<p class="err">${e}</p>`).join("")}<p class="${j.ok?"ok":"err"}">${j.provider?`via ${j.provider} · `:""}${(j.questions||[]).length} questions parsed${j.saved&&j.saved.length?`, saved: ${j.saved.join(", ")}`:""}</p><pre>${JSON.stringify(j.questions||[],null,1).slice(0,6000)}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;
   $("llmOut").innerHTML=st===200||j.questions?`${(j.errors||[]).map(e=>`<p class="err">${e}</p>`).join("")}<p class="${j.ok?"ok":"err"}">${(j.questions||[]).length} questions parsed${j.saved&&j.saved.length?`, saved: ${j.saved.join(", ")}`:""}</p><pre>${JSON.stringify(j.questions||[],null,1).slice(0,6000)}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;
   if(j.saved&&j.saved.length)dash();}
 async function loadCfg(){const{st,j}=await api("GET","/api/config");$("cTime").value=j.time_sec;

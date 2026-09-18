@@ -111,6 +111,12 @@ def bank_add():
             f"Valid: {sorted(known) or 'none — define buckets in the Topics tab first'}"]}), 422
     target = BANK_DIR / BANK_FILE.get(q.get("section"), "qa.jsonl")
     target.parent.mkdir(parents=True, exist_ok=True)
+    _append_bank(target, q)
+    return jsonify({"ok": True, "qid": q.get("qid"), "file": target.name})
+
+
+def _append_bank(target, q):
+    """Append one question JSONL-line, safe when the last line lacks \\n."""
     prefix = ""
     if target.exists() and target.stat().st_size:
         with target.open("rb") as f:
@@ -119,7 +125,6 @@ def bank_add():
                 prefix = "\n"
     with target.open("a", encoding="utf-8") as f:
         f.write(prefix + json.dumps(q, ensure_ascii=False) + "\n")
-    return jsonify({"ok": True, "qid": q.get("qid"), "file": target.name})
 
 
 # ---------------- blueprints + assembly ----------------
@@ -371,19 +376,107 @@ def config_save():
 # ---------------- LLM loop (opt-in) ----------------
 
 def _llm_config():
-    return _read_json(LLM_CONFIG_PATH,
-                      {"enabled": False, "provider": "openai-compatible",
-                       "base_url": "", "model": "", "api_key": ""})
+    raw = _read_json(LLM_CONFIG_PATH,
+                     {"enabled": False, "provider": "openai-compatible",
+                      "base_url": "", "model": "", "api_key": ""})
+    return _normalize_llm_config(raw)
+
+
+def _normalize_llm_config(raw):
+    """Merge legacy flat config into the providers block (read-side only).
+
+    Legacy shape: {enabled, provider: 'openai-compatible', base_url, model,
+    api_key}. New shape: {enabled, provider: 'openai'|'gemini',
+    providers: {openai: {...}, gemini: {...}}}. Legacy values win when the
+    providers block lacks them, so old files keep working untouched.
+    """
+    raw = dict(raw or {})
+    providers = {k: dict(v or {}) for k, v in (raw.get("providers") or {}).items()}
+    providers.setdefault("openai", {})
+    providers.setdefault("gemini", {})
+    if raw.get("base_url") or raw.get("model") or raw.get("api_key"):
+        leg = providers["openai"]
+        leg.setdefault("base_url", raw.get("base_url") or "https://api.openai.com/v1")
+        leg.setdefault("model", raw.get("model") or "")
+        leg.setdefault("api_key", raw.get("api_key") or "")
+    providers["openai"].setdefault("base_url", "https://api.openai.com/v1")
+    providers["gemini"].setdefault("model", "gemini-2.0-flash")
+    prov = (raw.get("provider") or "openai").lower()
+    if prov == "openai-compatible":
+        prov = "openai"
+    if prov not in providers:
+        prov = "openai"
+    raw["provider"] = prov
+    raw["providers"] = providers
+    return raw
+
+
+def _active_provider_cfg(cfg, name=None):
+    """Resolve (name, pconf, error) for the requested or default provider."""
+    name = (name or cfg.get("provider") or "openai").lower()
+    if name == "openai-compatible":
+        name = "openai"
+    pconf = (cfg.get("providers") or {}).get(name)
+    if pconf is None:
+        return name, None, f"unknown provider '{name}' (use openai or gemini)"
+    if not (pconf.get("model") or "").strip():
+        return name, None, f"no model set for '{name}' in app/llm.config.json"
+    if not (pconf.get("api_key") or "").strip():
+        return name, None, f"no api_key set for '{name}' in app/llm.config.json"
+    if name == "openai" and not (pconf.get("base_url") or "").strip():
+        return name, None, "no base_url set for 'openai' in app/llm.config.json"
+    return name, pconf, None
 
 
 @app.get("/api/llm/status")
 def llm_status():
     cfg = _llm_config()
-    return jsonify({"enabled": bool(cfg.get("enabled")),
-                    "provider": cfg.get("provider", ""),
-                    "model": cfg.get("model", ""),
-                    "base_url": cfg.get("base_url", ""),
-                    "has_key": bool(cfg.get("api_key"))})
+    out = {"enabled": bool(cfg.get("enabled")), "provider": cfg.get("provider", "")}
+    provs = {}
+    for name, p in (cfg.get("providers") or {}).items():
+        provs[name] = {"model": p.get("model", ""),
+                       "has_key": bool(p.get("api_key"))}
+        if name == "openai":
+            provs[name]["base_url"] = p.get("base_url", "")
+    out["providers"] = provs
+    return jsonify(out)
+
+
+def _openai_request(pconf, system, user):
+    """(url, headers, body) for an OpenAI-compatible chat-completions call."""
+    return (pconf["base_url"].rstrip("/") + "/chat/completions",
+            {"Authorization": f"Bearer {pconf.get('api_key', '')}"},
+            {"model": pconf.get("model"),
+             "messages": [{"role": "system", "content": system},
+                          {"role": "user", "content": user}]})
+
+
+def _gemini_request(pconf, system, user):
+    """(url, headers, body) for a Gemini generateContent call.
+
+    System prompt goes in systemInstruction, batch prompt in contents;
+    responseMimeType JSON keeps the reply parseable by _extract_questions.
+    """
+    return (f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{pconf.get('model')}:generateContent",
+            {"x-goog-api-key": pconf.get("api_key", ""),
+             "Content-Type": "application/json"},
+            {"systemInstruction": {"parts": [{"text": system}]},
+             "contents": [{"parts": [{"text": user}]}],
+             "generationConfig": {"responseMimeType": "application/json",
+                                  "temperature": 0.7}})
+
+
+def _gemini_text(payload):
+    """Join the text parts of a generateContent response."""
+    cands = payload.get("candidates") or []
+    if not cands:
+        raise RuntimeError(f"no candidates in Gemini reply: {str(payload)[:300]}")
+    parts = ((cands[0].get("content") or {}).get("parts")) or []
+    text = "".join(p.get("text", "") for p in parts if isinstance(p, dict))
+    if not text.strip():
+        raise RuntimeError(f"empty text in Gemini reply: {str(payload)[:300]}")
+    return text
 
 
 def _build_llm_prompt(section, n, difficulty, topic_mix):
@@ -438,17 +531,22 @@ def llm_generate():
     if err:
         return jsonify({"ok": False, "errors": [err]}), 500
     import requests
+    prov_name, pconf, perr = _active_provider_cfg(cfg, body.get("provider"))
+    if perr:
+        return jsonify({"ok": False, "errors": [perr]}), 422
     try:
-        r = requests.post(cfg["base_url"].rstrip("/") + "/chat/completions",
-                          headers={"Authorization": f"Bearer {cfg.get('api_key', '')}"},
-                          json={"model": cfg.get("model"),
-                                "messages": [{"role": "system", "content": system},
-                                             {"role": "user", "content": user}]},
-                          timeout=120)
-        r.raise_for_status()
-        text = r.json()["choices"][0]["message"]["content"]
+        if prov_name == "gemini":
+            url, headers, payload = _gemini_request(pconf, system, user)
+            r = requests.post(url, headers=headers, json=payload, timeout=120)
+            r.raise_for_status()
+            text = _gemini_text(r.json())
+        else:
+            url, headers, payload = _openai_request(pconf, system, user)
+            r = requests.post(url, headers=headers, json=payload, timeout=120)
+            r.raise_for_status()
+            text = r.json()["choices"][0]["message"]["content"]
     except Exception as e:
-        return jsonify({"ok": False, "errors": [f"LLM call failed: {e}"]}), 502
+        return jsonify({"ok": False, "errors": [f"LLM call failed ({prov_name}): {e}"]}), 502
     questions = _extract_questions(text)
     errs = banklib.validate_schema({"questions": questions}, QSCHEMA) if questions else ["no questions parsed"]
     saved = []
@@ -456,14 +554,13 @@ def llm_generate():
         pool = _pool()
         have = {x.get("qid") for x in pool}
         target = BANK_DIR / BANK_FILE.get(questions[0].get("section"), "qa.jsonl")
-        with target.open("a", encoding="utf-8") as f:
-            for x in questions:
-                if x.get("qid") in have:
-                    continue
-                f.write(json.dumps(x, ensure_ascii=False) + "\n")
-                saved.append(x.get("qid"))
+        for x in questions:
+            if x.get("qid") in have:
+                continue
+            _append_bank(target, x)
+            saved.append(x.get("qid"))
     return jsonify({"ok": not errs, "questions": questions, "errors": errs,
-                    "saved": saved, "raw": text[:4000],
+                    "saved": saved, "raw": text[:4000], "provider": prov_name,
                     "sent": {"system": system, "user": user}})
 
 

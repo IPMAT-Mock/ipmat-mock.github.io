@@ -33,7 +33,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </head>
 <body>
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
-<a href="/../public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
+<a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
 <button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
 </nav>
@@ -152,7 +152,7 @@ async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)ret
     h+=`<tr><td>${s}</td><td>${b}</td><td>${d.Easy||0}</td><td>${d.Medium||0}</td><td>${d.Hard||0}</td><td>${(d.Easy||0)+(d.Medium||0)+(d.Hard||0)}</td></tr>`;}
   $("stats").innerHTML=h+"</table>";
   const p=await api("GET","/api/papers");
-  $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><a href="/../public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
+  $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><a href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
   const bp=await api("GET","/api/blueprints");
   $("wBp").innerHTML=(bp.j.blueprints||[]).map(b=>`<option value="${b.file}">${b.title||b.file}</option>`).join("");
   llmStat();}
@@ -199,7 +199,7 @@ async function assemble(){const body={kind:$("wKind").value,title:$("wTitle").va
 async function publish(){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
   lastPaper.paper_id=(lastPaper.paper_id||"IPMAT-CUSTOM")+(lastPaper.kind==="simulation"?"-SIM":"");
   const{st,j}=await api("POST","/api/papers/publish",{paper:lastPaper});
-  $("pubMsg").innerHTML=st===200?`<span class="ok">published</span> <a href="/../public/index.html?paper=${encodeURIComponent(j.entry.id)}" target="_blank">Open in runner ↗</a>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
+  $("pubMsg").innerHTML=st===200?`<span class="ok">published</span> <a href="/public/index.html?paper=${encodeURIComponent(j.entry.id)}" target="_blank">Open in runner ↗</a>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
   if(st===200)dash();}
 async function llmStat(){const{st,j}=await api("GET","/api/llm/status");
   $("llmStat").innerHTML=st===200?`<p class="${j.enabled?"ok":"muted"}">${j.enabled?`enabled · ${j.provider} · ${j.model||"no model set"} · key ${j.has_key?"present":"MISSING"}`:"disabled — set enabled=true in app/llm.config.json to use"}</p>`:"";}

@@ -62,6 +62,12 @@ def index():
     return send_from_directory(str(APP_DIR), "admin.html")
 
 
+@app.get("/public/<path:name>")
+def public_files(name):
+    """Serve the test runner + published papers so ?paper=<id> links work."""
+    return send_from_directory(str(ROOT / "public"), name)
+
+
 # ---------------- bank ----------------
 
 @app.get("/api/health")

@@ -1,0 +1,375 @@
+{
+  "paper_id": "IPMAT-PRACTICE-15",
+  "title": "Mixed Practice 15",
+  "kind": "practice",
+  "spec": {
+    "total_questions": 15,
+    "time_sec": 8100,
+    "marking": {
+      "correct": 3,
+      "wrong": -1,
+      "skipped": 0
+    }
+  },
+  "sections": [
+    {
+      "code": "QA",
+      "count": 7
+    },
+    {
+      "code": "LR",
+      "count": 4
+    },
+    {
+      "code": "VARC",
+      "count": 4
+    }
+  ],
+  "questions": [
+    {
+      "qid": "ipmat-comp-q-022",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Inequalities",
+      "subtopic": "1.22",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Solve the inequality: 3x - 7 < 5x + 3.",
+      "options": [
+        "x > -5",
+        "x < -5",
+        "x > 5",
+        "x < 5"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "-7 - 3 < 5x - 3x => -10 < 2x => x > -5. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-006",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Logarithms",
+      "subtopic": "1.6",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Solve for x if log_x(2) + log_2(x) = 2.",
+      "options": [
+        "x = 1",
+        "x = 2",
+        "x = 4",
+        "x = 8"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "Let log_2(x) = y. Then 1/y + y = 2 => y^2 - 2y + 1 = 0 => (y-1)^2 = 0 => y = 1. Hence, log_2(x) = 1 => x = 2^1 = 2. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-016",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Probability",
+      "subtopic": "1.16",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "A fair die is rolled once. What is the probability of getting a prime number?",
+      "options": [
+        "1/6",
+        "1/3",
+        "1/2",
+        "2/3"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "Prime numbers on a die are 2, 3, 5 (3 outcomes out of 6). Probability = 3/6 = 1/2. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-030",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Number System",
+      "subtopic": "1.30",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the remainder when 2^256 is divided by 17.",
+      "options": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "2^4 = 16 = -1 (mod 17). 2^256 = (2^4)^64 = (-1)^64 = 1 (mod 17). Remainder is 1. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-008",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Arithmetic Progressions",
+      "subtopic": "1.8",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "The sum of the first 10 terms of an AP is 155 and the first term is 2. Find the common difference.",
+      "options": [
+        "2.5",
+        "3",
+        "3.5",
+        "4"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "S_n = (n/2)[2a + (n-1)d] => 155 = 5 * [4 + 9d] => 31 = 4 + 9d => 27 = 9d => d = 3. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-029",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Number System",
+      "subtopic": "1.29",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the unit digit of the expression 7^105.",
+      "options": [
+        "1",
+        "3",
+        "7",
+        "9"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "Cyclicity of 7 is 4. Divide 105 by 4, remainder is 1. 7^1 = 7. Unit digit is 7. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-010",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Geometric Progressions",
+      "subtopic": "1.10",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the 6th term of a GP whose first term is 3 and common ratio is 2.",
+      "options": [
+        "48",
+        "96",
+        "192",
+        "384"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "T_n = a * r^(n-1) => T_6 = 3 * 2^5 = 3 * 32 = 96. Index 1."
+    },
+    {
+      "qid": "LR-ARR-006",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Order",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "Six boxes stacked 1 (bottom) to 6 (top). Box M is above K by two positions. J is just below M. L is at top. Which box is at bottom?",
+      "options": [
+        "K",
+        "J",
+        "M",
+        "Cannot be determined"
+      ],
+      "answer_index": 3,
+      "hint": "Stack constraints leave two cases.",
+      "solution": "L=6, J=M-1, M=K+2 gives valid stacks with different bottoms, so undetermined."
+    },
+    {
+      "qid": "LR-ARR-005",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Blood relation",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "P - Q means P is sister of Q, P ÷ R means P is daughter of R, R x S means R is brother of S, S + T means S is mother of T. In P - Q ÷ R x S + T, how is P related to T?",
+      "options": [
+        "Cousin",
+        "Sister",
+        "Aunt",
+        "Niece"
+      ],
+      "answer_index": 0,
+      "hint": "R x S makes R uncle/aunt line.",
+      "solution": "P is daughter of R; R is brother of S; S is mother of T. So P and T are cousins."
+    },
+    {
+      "qid": "LR-CR-002",
+      "section": "LR",
+      "topic": "CriticalReasoning",
+      "subtopic": "Assumption",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Argument: 'The new library will raise reading scores because students will borrow more books.' The argument assumes:",
+      "options": [
+        "Borrowing books raises scores",
+        "Libraries are quiet",
+        "Teachers agree",
+        "Books are new"
+      ],
+      "answer_index": 0,
+      "hint": "Link premise to conclusion.",
+      "solution": "The causal bridge is that borrowed books translate into higher scores."
+    },
+    {
+      "qid": "LR-CR-003",
+      "section": "LR",
+      "topic": "CriticalReasoning",
+      "subtopic": "Inference",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "All managers passed the audit; some auditors are managers. Which follows?",
+      "options": [
+        "All auditors passed",
+        "Some auditors passed",
+        "No auditor passed",
+        "None follows"
+      ],
+      "answer_index": 1,
+      "hint": "Some = at least one.",
+      "solution": "Auditors who are managers passed, so some auditors passed."
+    },
+    {
+      "qid": "VA-GR-002",
+      "section": "VARC",
+      "topic": "Grammar",
+      "subtopic": "Fill blank",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "She has lived here ___ 2019.",
+      "options": [
+        "from",
+        "by",
+        "since",
+        "for"
+      ],
+      "answer_index": 2,
+      "hint": "Point in time.",
+      "solution": "'Since' with a point in time; 'for' with a duration."
+    },
+    {
+      "qid": "VA-VO-002",
+      "section": "VARC",
+      "topic": "Vocabulary",
+      "subtopic": "Antonym",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "Choose the best antonym of OPACITY.",
+      "options": [
+        "Gloom",
+        "Density",
+        "Transparency",
+        "Complexity"
+      ],
+      "answer_index": 2,
+      "hint": "Light through.",
+      "solution": "Opacity vs transparency."
+    },
+    {
+      "qid": "VA-GR-001",
+      "section": "VARC",
+      "topic": "Grammar",
+      "subtopic": "Error spotting",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "Identify the error: 'Neither of the plans were approved.'",
+      "options": [
+        "No error",
+        "Neither",
+        "of the plans",
+        "were"
+      ],
+      "answer_index": 3,
+      "hint": "Neither = singular.",
+      "solution": "'Neither' takes singular 'was'."
+    },
+    {
+      "qid": "VA-VL-001",
+      "section": "VARC",
+      "topic": "VerbalLogic",
+      "subtopic": "Odd-one-out",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Pick the odd one out: (A) AI tutors grade essays, (B) Quantum sensors map fields, (C) AI tutors grade essays with feedback loops, (D) AI tutors grade essays overnight.",
+      "options": [
+        "C",
+        "D",
+        "A",
+        "B"
+      ],
+      "answer_index": 3,
+      "hint": "Three share a theme.",
+      "solution": "Three concern AI essay grading; quantum sensors differ in domain."
+    }
+  ]
+}

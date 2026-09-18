@@ -1,0 +1,13 @@
+paper_id: IPMAT-PRACTICE-15
+title: Mixed Practice 15
+kind: practice
+time_sec: 8100
+marking: {correct: 3, wrong: -1, skipped: 0}
+sections:
+  - code: QA
+    count: 7
+  - code: LR
+    count: 4
+  - code: VARC
+    count: 4
+difficulty_split: {Easy: 5, Medium: 6, Hard: 4}

@@ -1,0 +1,28 @@
+paper_id: IPMAT-MOCK-60Q
+title: IPMAT Full Mock (IIMB pattern)
+kind: full_mock
+time_sec: 8100
+marking: {correct: 3, wrong: -1, skipped: 0}
+sections:
+  - code: QA
+    count: 30
+    mix:
+      Arithmetic: 13
+      Algebra: 7
+      ModernMath_Geometry: 6
+      DataInterpretation: 4
+  - code: LR
+    count: 15
+    mix:
+      Arrangements: 7
+      Series_Coding: 4
+      CriticalReasoning: 4
+  - code: VARC
+    count: 15
+    mix:
+      ReadingComprehension: 7
+      VerbalLogic: 4
+      Grammar: 2
+      Vocabulary: 2
+difficulty_split: {Easy: 20, Medium: 24, Hard: 16}
+answer_balance: {tolerance: 2}

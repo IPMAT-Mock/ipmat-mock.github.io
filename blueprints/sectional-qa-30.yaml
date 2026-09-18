@@ -1,0 +1,9 @@
+paper_id: IPMAT-QA-30
+title: QA Sectional 30
+kind: sectional
+time_sec: 8100
+marking: {correct: 3, wrong: -1, skipped: 0}
+sections:
+  - code: QA
+    count: 30
+difficulty_split: {Easy: 10, Medium: 12, Hard: 8}

@@ -1,0 +1,1417 @@
+{
+  "paper_id": "IPMAT-MOCK-60Q",
+  "title": "IPMAT Full Mock (IIMB pattern)",
+  "kind": "full_mock",
+  "spec": {
+    "total_questions": 60,
+    "time_sec": 8100,
+    "marking": {
+      "correct": 3,
+      "wrong": -1,
+      "skipped": 0
+    }
+  },
+  "sections": [
+    {
+      "code": "QA",
+      "count": 30
+    },
+    {
+      "code": "LR",
+      "count": 15
+    },
+    {
+      "code": "VARC",
+      "count": 15
+    }
+  ],
+  "questions": [
+    {
+      "qid": "ipmat-comp-q-020",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Functions & Graphs",
+      "subtopic": "1.20",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the domain of the function f(x) = 1 / sqrt(x^2 - 9).",
+      "options": [
+        "x > 3",
+        "x < -3",
+        "x > 3 or x < -3",
+        "All real values"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "For square root in denominator, x^2 - 9 > 0 => (x-3)(x+3) > 0 => x > 3 or x < -3. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-015",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Permutations & Combinations",
+      "subtopic": "1.15",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "How many 4-digit numbers can be formed using digits 0, 1, 2, 3, 4, 5 without repetition?",
+      "options": [
+        "300",
+        "360",
+        "420",
+        "480"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Thousands place cannot be 0 (5 options). Hundreds place (5 options left), Tens (4 options), Units (3 options). Total = 5 * 5 * 4 * 3 = 300. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-011",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Geometric Progressions",
+      "subtopic": "1.11",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the sum of an infinite geometric progression whose first term is 10 and common ratio is 0.4.",
+      "options": [
+        "14.5",
+        "16.67",
+        "20",
+        "25"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "S_inf = a / (1 - r) = 10 / (1 - 0.4) = 10 / 0.6 = 100/6 = 16.67. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-027",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Linear Equations",
+      "subtopic": "1.27",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "A fraction becomes 4/5 if 1 is added to both numerator and denominator. If 5 is subtracted from both, it becomes 1/2. Find the original fraction.",
+      "options": [
+        "7/9",
+        "5/7",
+        "3/5",
+        "11/14"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Let fraction be x/y. (x+1)/(y+1) = 4/5 => 5x - 4y = -1. (x-5)/(y-5) = 1/2 => 2x - y = 5 => y = 2x - 5. Substitute: 5x - 4(2x-5) = -1 => -3x + 20 = -1 => 3x = 21 => x = 7, y = 9. Fraction is 7/9. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-023",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Inequalities",
+      "subtopic": "1.23",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the set of real values of x satisfying |3x - 4| <= 5.",
+      "options": [
+        "[-1/3, 3]",
+        "[-3, 1/3]",
+        "[-1, 3]",
+        "[-3, 1]"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "-5 <= 3x - 4 <= 5 => -1 <= 3x <= 9 => -1/3 <= x <= 3. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-007",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Arithmetic Progressions",
+      "subtopic": "1.7",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the 15th term of an AP whose first term is 5 and common difference is 4.",
+      "options": [
+        "55",
+        "61",
+        "65",
+        "71"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "T_n = a + (n-1)d => T_15 = 5 + (15-1)*4 = 5 + 56 = 61. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-006",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Logarithms",
+      "subtopic": "1.6",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Solve for x if log_x(2) + log_2(x) = 2.",
+      "options": [
+        "x = 1",
+        "x = 2",
+        "x = 4",
+        "x = 8"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "Let log_2(x) = y. Then 1/y + y = 2 => y^2 - 2y + 1 = 0 => (y-1)^2 = 0 => y = 1. Hence, log_2(x) = 1 => x = 2^1 = 2. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-013",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Permutations & Combinations",
+      "subtopic": "1.13",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "In how many ways can 5 books be arranged on a shelf?",
+      "options": [
+        "24",
+        "60",
+        "120",
+        "240"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "The number of arrangements is 5! = 5 * 4 * 3 * 2 * 1 = 120. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-012",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Geometric Progressions",
+      "subtopic": "1.12",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "The sum of the first three terms of a GP is 13/12 and their product is -1. Find the common ratio if r < 0.",
+      "options": [
+        "-4/3",
+        "-3/4",
+        "-4/3 or -3/4",
+        "-1/2"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "Let terms be a/r, a, ar. Product = a^3 = -1 => a = -1. Sum = -1/r - 1 - r = 13/12 => 1/r + r = -25/12 => 12r^2 + 25r + 12 = 0 => (3r+4)(4r+3)=0 => r = -4/3 or -3/4. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-016",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Probability",
+      "subtopic": "1.16",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "A fair die is rolled once. What is the probability of getting a prime number?",
+      "options": [
+        "1/6",
+        "1/3",
+        "1/2",
+        "2/3"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "Prime numbers on a die are 2, 3, 5 (3 outcomes out of 6). Probability = 3/6 = 1/2. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-010",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Geometric Progressions",
+      "subtopic": "1.10",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the 6th term of a GP whose first term is 3 and common ratio is 2.",
+      "options": [
+        "48",
+        "96",
+        "192",
+        "384"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "T_n = a * r^(n-1) => T_6 = 3 * 2^5 = 3 * 32 = 96. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-026",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Linear Equations",
+      "subtopic": "1.26",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the value of m for which the lines 3x + 4y = 12 and mx + 6y = 15 are parallel.",
+      "options": [
+        "m = 4.5",
+        "m = 3",
+        "m = 2",
+        "m = 6"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "For parallel lines, dynamic slopes match: 3/m = 4/6 = 2/3 => m = 4.5. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-030",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Number System",
+      "subtopic": "1.30",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the remainder when 2^256 is divided by 17.",
+      "options": [
+        "1",
+        "2",
+        "4",
+        "16"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "2^4 = 16 = -1 (mod 17). 2^256 = (2^4)^64 = (-1)^64 = 1 (mod 17). Remainder is 1. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-022",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Inequalities",
+      "subtopic": "1.22",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Solve the inequality: 3x - 7 < 5x + 3.",
+      "options": [
+        "x > -5",
+        "x < -5",
+        "x > 5",
+        "x < 5"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "-7 - 3 < 5x - 3x => -10 < 2x => x > -5. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-017",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Probability",
+      "subtopic": "1.17",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Two cards are drawn simultaneously from a well-shuffled pack of 52 cards. What is the probability that both are aces?",
+      "options": [
+        "1/221",
+        "1/169",
+        "4/663",
+        "2/51"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "P = (4/52) * (3/51) = (1/13) * (1/17) = 1/221. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-028",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Number System",
+      "subtopic": "1.28",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "What is the Highest Common Factor (HCF) of 36 and 84?",
+      "options": [
+        "6",
+        "12",
+        "18",
+        "24"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "Factors of 36 include 12, factors of 84 include 12. 12 is the largest common divisor. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-002",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Quadratic Equations",
+      "subtopic": "1.2",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "If the roots of the equation x^2 - kx + 9 = 0 are real and equal, find the positive value of k.",
+      "options": [
+        "k = 3",
+        "k = 6",
+        "k = 9",
+        "k = 12"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "For real and equal roots, the discriminant b^2 - 4ac must equal 0. Here, (-k)^2 - 4(1)(9) = 0 => k^2 = 36 => k = 6 for the positive value. This matches index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-014",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Permutations & Combinations",
+      "subtopic": "1.14",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Out of 7 players, a committee of 4 needs to be formed. How many different committees can be selected?",
+      "options": [
+        "35",
+        "70",
+        "105",
+        "140"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Number of combinations = 7C4 = 7! / (4! * 3!) = (7*6*5)/(3*2*1) = 35. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-019",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Functions & Graphs",
+      "subtopic": "1.19",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "If f(x) = 2x^2 - 3x + 5, find the value of f(-2).",
+      "options": [
+        "7",
+        "11",
+        "15",
+        "19"
+      ],
+      "answer_index": 3,
+      "hint": "",
+      "solution": "f(-2) = 2(-2)^2 - 3(-2) + 5 = 2(4) + 6 + 5 = 8 + 6 + 5 = 19. Index 3."
+    },
+    {
+      "qid": "ipmat-comp-q-003",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Quadratic Equations",
+      "subtopic": "1.3",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "If alpha and beta are the roots of 2x^2 - 7x + 5 = 0, find the value of (alpha/beta) + (beta/alpha).",
+      "options": [
+        "29/10",
+        "37/10",
+        "41/10",
+        "49/10"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Sum of roots alpha+beta = 7/2, product alpha*beta = 5/2. (alpha/beta) + (beta/alpha) = (alpha^2 + beta^2)/(alpha*beta) = [(alpha+beta)^2 - 2*alpha*beta]/(alpha*beta) = [(49/4) - 5] / (5/2) = (29/4) * (2/5) = 29/10. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-018",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Probability",
+      "subtopic": "1.18",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "A bag contains 5 red and 4 blue balls. If 3 balls are drawn at random, find the probability that at least 2 are red.",
+      "options": [
+        "25/42",
+        "29/42",
+        "31/42",
+        "37/42"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Total ways = 9C3 = 84. At least 2 red means 2 red + 1 blue or 3 red. 2R 1B = 5C2 * 4C1 = 10 * 4 = 40. 3R = 5C3 = 10. Total favorable = 50. P = 50/84 = 25/42. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-029",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Number System",
+      "subtopic": "1.29",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the unit digit of the expression 7^105.",
+      "options": [
+        "1",
+        "3",
+        "7",
+        "9"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "Cyclicity of 7 is 4. Divide 105 by 4, remainder is 1. 7^1 = 7. Unit digit is 7. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-005",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Logarithms",
+      "subtopic": "1.5",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the value of x that satisfies log_2(x) + log_2(x - 2) = 3.",
+      "options": [
+        "x = 2",
+        "x = 4",
+        "x = -2",
+        "x = 4 or x = -2"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "log_2(x(x-2)) = 3 => x(x-2) = 2^3 = 8 => x^2 - 2x - 8 = 0 => (x-4)(x+2) = 0. Since log domain requires x > 2, x = 4 is the only valid solution. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-025",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Linear Equations",
+      "subtopic": "1.25",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Solve for x and y: x + y = 14 and x - y = 4.",
+      "options": [
+        "x=9, y=5",
+        "x=10, y=4",
+        "x=8, y=6",
+        "x=7, y=7"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Adding equations gives 2x = 18 => x = 9. Substituting gives 9 + y = 14 => y = 5. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-008",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Arithmetic Progressions",
+      "subtopic": "1.8",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "The sum of the first 10 terms of an AP is 155 and the first term is 2. Find the common difference.",
+      "options": [
+        "2.5",
+        "3",
+        "3.5",
+        "4"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "S_n = (n/2)[2a + (n-1)d] => 155 = 5 * [4 + 9d] => 31 = 4 + 9d => 27 = 9d => d = 3. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-009",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Arithmetic Progressions",
+      "subtopic": "1.9",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "If the 5th term of an AP is 1/10 and the 10th term is 1/5, find the sum of the first 50 terms.",
+      "options": [
+        "25.5",
+        "50.5",
+        "25.25",
+        "51.25"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "a + 4d = 1/10, a + 9d = 1/5 => 5d = 1/10 => d = 1/50. Then a = 1/10 - 4/50 = 1/50. S_50 = 25 * [2/50 + 49/50] = 25 * (51/50) = 51/2 = 25.5. Index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-024",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Inequalities",
+      "subtopic": "1.24",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the range of x for which (x-1)(x-3)/(x-2) >= 0.",
+      "options": [
+        "(1, 2) U (3, inf)",
+        "[1, 2) U [3, inf)",
+        "[1, 2] U [3, inf)",
+        "(1, 2] U [3, inf)"
+      ],
+      "answer_index": 1,
+      "hint": "",
+      "solution": "Critical points are 1, 2, 3. Sign scheme yields positive in [1, 2) and [3, inf). x=2 is excluded to prevent division by zero. Index 1."
+    },
+    {
+      "qid": "ipmat-comp-q-001",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Quadratic Equations",
+      "subtopic": "1.1",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the roots of the quadratic equation x^2 - 5x + 6 = 0.",
+      "options": [
+        "x = 2 or x = 3",
+        "x = -2 or x = -3",
+        "x = 1 or x = 6",
+        "x = -1 or x = -6"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Factoring x^2 - 5x + 6 gives (x - 2)(x - 3) = 0. Therefore, x = 2 or x = 3. This matches index 0."
+    },
+    {
+      "qid": "ipmat-comp-q-004",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Logarithms",
+      "subtopic": "1.4",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Solve for x if log_5(x) = 3.",
+      "options": [
+        "x = 15",
+        "x = 81",
+        "x = 125",
+        "x = 243"
+      ],
+      "answer_index": 2,
+      "hint": "",
+      "solution": "Converting to exponential form, x = 5^3 = 125. Index 2."
+    },
+    {
+      "qid": "ipmat-comp-q-021",
+      "section": "QA",
+      "topic": "Quantitative Aptitude - Functions & Graphs",
+      "subtopic": "1.21",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Find the inverse function f^(-1)(x) for f(x) = (2x + 3)/(5x - 2).",
+      "options": [
+        "(2x + 3)/(5x - 2)",
+        "(3x + 2)/(5x - 2)",
+        "(2x - 3)/(5x + 2)",
+        "(5x - 2)/(2x + 3)"
+      ],
+      "answer_index": 0,
+      "hint": "",
+      "solution": "Let y = (2x+3)/(5x-2) => 5xy - 2y = 2x + 3 => x(5y - 2) = 2y + 3 => x = (2y + 3)/(5y - 2). The inverse function is identical. Index 0."
+    },
+    {
+      "qid": "LR-SER-001",
+      "section": "LR",
+      "topic": "Series_Coding",
+      "subtopic": "Letter series",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 90,
+      "stem": "Find the odd one out: EKDG, KQJM, NTMP, OULQ.",
+      "options": [
+        "EKDG",
+        "KQJM",
+        "NTMP",
+        "OULQ"
+      ],
+      "answer_index": 3,
+      "hint": "Check letter gaps.",
+      "solution": "First three follow +6,-7,+3 pattern on positions; OULQ breaks it."
+    },
+    {
+      "qid": "LR-SER-002",
+      "section": "LR",
+      "topic": "Series_Coding",
+      "subtopic": "Number series",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 90,
+      "stem": "2, 6, 12, 20, 30, ?",
+      "options": [
+        "40",
+        "42",
+        "44",
+        "46"
+      ],
+      "answer_index": 1,
+      "hint": "n(n+1).",
+      "solution": "Pattern n(n+1): 1x2,2x3,...,5x6=30, 6x7=42."
+    },
+    {
+      "qid": "LR-ARR-004",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Floor puzzle",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Four people live on floors 1-4. A lives above B. C lives just below D. B is not on floor 1. Who lives on floor 1?",
+      "options": [
+        "B",
+        "C",
+        "A",
+        "D"
+      ],
+      "answer_index": 1,
+      "hint": "C-D adjacent pair.",
+      "solution": "C just below D gives pairs (1,2),(2,3),(3,4). A above B with B not on 1 forces C on floor 1."
+    },
+    {
+      "qid": "LR-CR-001",
+      "section": "LR",
+      "topic": "CriticalReasoning",
+      "subtopic": "Cause-effect",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "A city expanded bus lanes and bus ridership rose 20%. Which conclusion is best supported?",
+      "options": [
+        "Bus lanes caused all of the rise",
+        "Bus lanes likely contributed to the rise",
+        "Car ownership fell",
+        "Population stayed constant"
+      ],
+      "answer_index": 1,
+      "hint": "Avoid absolute claims.",
+      "solution": "Correlation with a plausible mechanism supports 'likely contributed', not absolute causation."
+    },
+    {
+      "qid": "LR-SER-004",
+      "section": "LR",
+      "topic": "Series_Coding",
+      "subtopic": "Analogies",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 90,
+      "stem": "Book : Pages :: Wall : ?",
+      "options": [
+        "Bricks",
+        "Paint",
+        "Height",
+        "Shadow"
+      ],
+      "answer_index": 0,
+      "hint": "Part-whole.",
+      "solution": "Pages compose a book as bricks compose a wall."
+    },
+    {
+      "qid": "LR-CR-004",
+      "section": "LR",
+      "topic": "CriticalReasoning",
+      "subtopic": "Strengthen",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "Claim: nightalmente study lowers scores. Which most strengthens it?",
+      "options": [
+        "Scores vary by subject",
+        "A controlled trial shows lower retention after late nights",
+        "One student disagrees",
+        "Libraries close early"
+      ],
+      "answer_index": 1,
+      "hint": "Prefer controlled evidence.",
+      "solution": "A controlled trial directly supports the causal claim; anecdotes do not."
+    },
+    {
+      "qid": "LR-ARR-002",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Seating line",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 90,
+      "stem": "Five friends A, B, C, D, E sit in a row facing north. C sits middle. A sits next to C on the left. E sits at an end. Who sits at the other end?",
+      "options": [
+        "B",
+        "D",
+        "A",
+        "Cannot be determined"
+      ],
+      "answer_index": 3,
+      "hint": "Place C, A, E first.",
+      "solution": "C=3, A=2, E=1 or 5. B and D fill remaining seats; either can be at the free end, so undetermined."
+    },
+    {
+      "qid": "LR-CR-003",
+      "section": "LR",
+      "topic": "CriticalReasoning",
+      "subtopic": "Inference",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "All managers passed the audit; some auditors are managers. Which follows?",
+      "options": [
+        "All auditors passed",
+        "Some auditors passed",
+        "No auditor passed",
+        "None follows"
+      ],
+      "answer_index": 1,
+      "hint": "Some = at least one.",
+      "solution": "Auditors who are managers passed, so some auditors passed."
+    },
+    {
+      "qid": "LR-ARR-006",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Order",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "Six boxes stacked 1 (bottom) to 6 (top). Box M is above K by two positions. J is just below M. L is at top. Which box is at bottom?",
+      "options": [
+        "K",
+        "J",
+        "M",
+        "Cannot be determined"
+      ],
+      "answer_index": 3,
+      "hint": "Stack constraints leave two cases.",
+      "solution": "L=6, J=M-1, M=K+2 gives valid stacks with different bottoms, so undetermined."
+    },
+    {
+      "qid": "LR-ARR-007",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Grouping",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "Four teams split into two groups of two. A and B cannot be together. C must be with D. How many valid groupings?",
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answer_index": 1,
+      "hint": "Fix C-D as one group.",
+      "solution": "C-D fixed as a group; remaining A,B split so A-B apart is automatic within 2v2 structure; 2 ways to label groups."
+    },
+    {
+      "qid": "LR-ARR-003",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Ranking",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 90,
+      "stem": "In a class, E scored 90 and ranked 3rd, F scored 84 and ranked 5th. If no ties between ranks 3-5, what did the 4th rank score?",
+      "options": [
+        "Above 90",
+        "Below 84",
+        "Between 84 and 90",
+        "Exactly 87"
+      ],
+      "answer_index": 2,
+      "hint": "Strict ordering.",
+      "solution": "Rank 4 lies strictly between rank 3 (90) and rank 5 (84), so between 84 and 90."
+    },
+    {
+      "qid": "LR-ARR-001",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Seven-day schedule",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "P, Q, R, S, T, U, V each visit on a different day Mon-Sun. Q visits Wednesday. P visits just before S. T visits after Q but before V. U visits Sunday. Who visits Monday?",
+      "options": [
+        "Cannot be determined",
+        "P",
+        "R",
+        "T"
+      ],
+      "answer_index": 2,
+      "hint": "Fix Q=Wed, U=Sun first.",
+      "solution": "With Q Wed and U Sun, P-S adjacent pair and T between Q and V constrain the grid; R is forced to Monday."
+    },
+    {
+      "qid": "LR-CR-002",
+      "section": "LR",
+      "topic": "CriticalReasoning",
+      "subtopic": "Assumption",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Argument: 'The new library will raise reading scores because students will borrow more books.' The argument assumes:",
+      "options": [
+        "Teachers agree",
+        "Books are new",
+        "Borrowing books raises scores",
+        "Libraries are quiet"
+      ],
+      "answer_index": 2,
+      "hint": "Link premise to conclusion.",
+      "solution": "The causal bridge is that borrowed books translate into higher scores."
+    },
+    {
+      "qid": "LR-ARR-005",
+      "section": "LR",
+      "topic": "Arrangements",
+      "subtopic": "Blood relation",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "P - Q means P is sister of Q, P ÷ R means P is daughter of R, R x S means R is brother of S, S + T means S is mother of T. In P - Q ÷ R x S + T, how is P related to T?",
+      "options": [
+        "Aunt",
+        "Niece",
+        "Cousin",
+        "Sister"
+      ],
+      "answer_index": 2,
+      "hint": "R x S makes R uncle/aunt line.",
+      "solution": "P is daughter of R; R is brother of S; S is mother of T. So P and T are cousins."
+    },
+    {
+      "qid": "LR-SER-003",
+      "section": "LR",
+      "topic": "Series_Coding",
+      "subtopic": "Coding",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "If CAT = 24 and DOG = 26, what is BAT?",
+      "options": [
+        "25",
+        "22",
+        "23",
+        "24"
+      ],
+      "answer_index": 2,
+      "hint": "Sum of positions.",
+      "solution": "C+A+T = 3+1+20 = 24; D+O+G = 4+15+7 = 26; B+A+T = 2+1+20 = 23."
+    },
+    {
+      "qid": "VA-GR-002",
+      "section": "VARC",
+      "topic": "Grammar",
+      "subtopic": "Fill blank",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "She has lived here ___ 2019.",
+      "options": [
+        "from",
+        "by",
+        "since",
+        "for"
+      ],
+      "answer_index": 2,
+      "hint": "Point in time.",
+      "solution": "'Since' with a point in time; 'for' with a duration."
+    },
+    {
+      "qid": "VA-VL-002",
+      "section": "VARC",
+      "topic": "VerbalLogic",
+      "subtopic": "Para-jumble",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Order: 1. Work-life lines blurred. 2. Firms set core hours. 3. Satisfaction rose. 4. Tools alone added meetings. Correct order?",
+      "options": [
+        "4-1-3-2",
+        "1-2-4-3",
+        "1-4-2-3",
+        "2-3-1-4"
+      ],
+      "answer_index": 2,
+      "hint": "Problem, failed fix, real fix, result.",
+      "solution": "Problem (1), failed fix (4), real fix (2), result (3)."
+    },
+    {
+      "qid": "VA-RC-007",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Assumption",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 180,
+      "passage": "Cities that priced night-time delivery slots cut daytime congestion. Merchants adapted schedules; residents reported quieter mornings despite initial resistance.",
+      "stem": "The policy's success assumes merchants:",
+      "options": [
+        "Ignore prices",
+        "Close permanently",
+        "Can shift schedules",
+        "Oppose all change"
+      ],
+      "answer_index": 2,
+      "hint": "Adaptation requires ability.",
+      "solution": "Adapted schedules presuppose merchants can shift them."
+    },
+    {
+      "qid": "VA-RC-003",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Tone",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "passage": "Rising visual impairment among students has prompted schools to rethink screen-heavy instruction. Studies link prolonged near-work with myopia progression, though outdoor time appears protective. Policymakers now weigh device limits against digital access goals.",
+      "stem": "The author's tone is best described as:",
+      "options": [
+        "Humorous",
+        "Alarmist",
+        "Balanced and deliberative",
+        "Dismissive"
+      ],
+      "answer_index": 2,
+      "hint": "Weighing = deliberation.",
+      "solution": "'Weigh' signals balanced deliberation, not alarm or dismissal."
+    },
+    {
+      "qid": "VA-VL-004",
+      "section": "VARC",
+      "topic": "VerbalLogic",
+      "subtopic": "Inference",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "stem": "'All successful founders embrace feedback; some reclusive geniuses shun it.' What follows?",
+      "options": [
+        "Feedback guarantees success",
+        "Recluses never found",
+        "All geniuses fail",
+        "Some successful founders are not reclusive geniuses"
+      ],
+      "answer_index": 3,
+      "hint": "Overlap logic.",
+      "solution": "Founders embrace feedback while reclusive geniuses shun it, so some founders are not in that group."
+    },
+    {
+      "qid": "VA-GR-001",
+      "section": "VARC",
+      "topic": "Grammar",
+      "subtopic": "Error spotting",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "Identify the error: 'Neither of the plans were approved.'",
+      "options": [
+        "No error",
+        "Neither",
+        "of the plans",
+        "were"
+      ],
+      "answer_index": 3,
+      "hint": "Neither = singular.",
+      "solution": "'Neither' takes singular 'was'."
+    },
+    {
+      "qid": "VA-RC-004",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Detail",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "passage": "Hybrid work promised flexibility but blurred boundaries. Firms that set core hours and protected focus time report higher satisfaction; those that merely added tools report meeting overload.",
+      "stem": "According to the passage, higher satisfaction came from:",
+      "options": [
+        "Longer meetings",
+        "Ending remote work",
+        "Adding more tools",
+        "Core hours and protected focus time"
+      ],
+      "answer_index": 3,
+      "hint": "Contrast the two firm types.",
+      "solution": "Satisfaction is attributed to core hours plus protected focus time."
+    },
+    {
+      "qid": "VA-VO-002",
+      "section": "VARC",
+      "topic": "Vocabulary",
+      "subtopic": "Antonym",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "Choose the best antonym of OPACITY.",
+      "options": [
+        "Complexity",
+        "Gloom",
+        "Density",
+        "Transparency"
+      ],
+      "answer_index": 3,
+      "hint": "Light through.",
+      "solution": "Opacity vs transparency."
+    },
+    {
+      "qid": "VA-VL-001",
+      "section": "VARC",
+      "topic": "VerbalLogic",
+      "subtopic": "Odd-one-out",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 120,
+      "stem": "Pick the odd one out: (A) AI tutors grade essays, (B) Quantum sensors map fields, (C) AI tutors grade essays with feedback loops, (D) AI tutors grade essays overnight.",
+      "options": [
+        "C",
+        "D",
+        "A",
+        "B"
+      ],
+      "answer_index": 3,
+      "hint": "Three share a theme.",
+      "solution": "Three concern AI essay grading; quantum sensors differ in domain."
+    },
+    {
+      "qid": "VA-RC-001",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Main idea",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 180,
+      "passage": "Rising visual impairment among students has prompted schools to rethink screen-heavy instruction. Studies link prolonged near-work with myopia progression, though outdoor time appears protective. Policymakers now weigh device limits against digital access goals.",
+      "stem": "What is the main idea of the passage?",
+      "options": [
+        "Outdoor time harms learning",
+        "Myopia is unrelated to near-work",
+        "Screens should be banned outright",
+        "Schools balance screen use against eye-health evidence"
+      ],
+      "answer_index": 3,
+      "hint": "Look for the tradeoff.",
+      "solution": "The passage frames a tradeoff: device limits versus digital access, grounded in eye-health evidence."
+    },
+    {
+      "qid": "VA-RC-005",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Inference",
+      "difficulty": "Hard",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 180,
+      "passage": "Hybrid work promised flexibility but blurred boundaries. Firms that set core hours and protected focus time report higher satisfaction; those that merely added tools report meeting overload.",
+      "stem": "The passage implies tools alone:",
+      "options": [
+        "Are unnecessary",
+        "Replace management",
+        "Guarantee satisfaction",
+        "Can worsen overload without norms"
+      ],
+      "answer_index": 3,
+      "hint": "'Merely added tools' result.",
+      "solution": "Tool-only firms report overload, implying tools without norms can worsen it."
+    },
+    {
+      "qid": "VA-VL-003",
+      "section": "VARC",
+      "topic": "VerbalLogic",
+      "subtopic": "Summary",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 90,
+      "stem": "Best summary: 'Sleep consolidates memory; all-nighters trade retention for hours.'",
+      "options": [
+        "Memory needs no sleep",
+        "Hours matter most",
+        "All-nighters always win",
+        "Sleep aids retention; all-nighters cost it"
+      ],
+      "answer_index": 3,
+      "hint": "Keep the tradeoff.",
+      "solution": "The summary must preserve the retention tradeoff."
+    },
+    {
+      "qid": "VA-VO-001",
+      "section": "VARC",
+      "topic": "Vocabulary",
+      "subtopic": "Synonym",
+      "difficulty": "Easy",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 60,
+      "stem": "Choose the closest synonym of PRAGMATIC.",
+      "options": [
+        "Idealistic",
+        "Hasty",
+        "Dogmatic",
+        "Practical"
+      ],
+      "answer_index": 3,
+      "hint": "Results-oriented.",
+      "solution": "Pragmatic = practical, results-oriented."
+    },
+    {
+      "qid": "VA-RC-006",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Title",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "passage": "Cities that priced night-time delivery slots cut daytime congestion. Merchants adapted schedules; residents reported quieter mornings despite initial resistance.",
+      "stem": "The best title is:",
+      "options": [
+        "Quieter Mornings Harmed Trade",
+        "Resistance Never Fades",
+        "Banning All Deliveries",
+        "Pricing Night Slots Eased Congestion"
+      ],
+      "answer_index": 3,
+      "hint": "Match the outcome.",
+      "solution": "The outcome is eased congestion via priced night slots."
+    },
+    {
+      "qid": "VA-RC-002",
+      "section": "VARC",
+      "topic": "ReadingComprehension",
+      "subtopic": "Inference",
+      "difficulty": "Medium",
+      "marks": {
+        "correct": 3,
+        "wrong": -1,
+        "skipped": 0
+      },
+      "time_sec": 150,
+      "passage": "Rising visual impairment among students has prompted schools to rethink screen-heavy instruction. Studies link prolonged near-work with myopia progression, though outdoor time appears protective. Policymakers now weigh device limits against digital access goals.",
+      "stem": "What can be inferred about outdoor time?",
+      "options": [
+        "It replaces all instruction",
+        "It has no effect",
+        "It worsens myopia",
+        "It may slow myopia progression"
+      ],
+      "answer_index": 3,
+      "hint": "'Protective' signals direction.",
+      "solution": "'Appears protective' implies outdoor time may slow progression."
+    }
+  ]
+}

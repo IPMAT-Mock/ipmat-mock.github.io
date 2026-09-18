@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IPMAT Paper v2 (IIMB 60Q, +3/-1, 135 min)",
+  "type": "object",
+  "required": ["paper_id", "title", "spec", "sections", "questions"],
+  "properties": {
+    "paper_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string"},
+    "subtitle": {"type": "string"},
+    "kind": {"type": "string", "enum": ["full_mock", "sectional", "practice", "simulated"]},
+    "spec": {
+      "type": "object",
+      "required": ["total_questions", "time_sec", "marking"],
+      "properties": {
+        "total_questions": {"type": "integer"},
+        "time_sec": {"const": 8100},
+        "marking": {
+          "type": "object",
+          "required": ["correct", "wrong", "skipped"],
+          "properties": {
+            "correct": {"const": 3},
+            "wrong": {"const": -1},
+            "skipped": {"const": 0}
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "count"],
+        "properties": {
+          "code": {"enum": ["QA", "LR", "VARC"]},
+          "count": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "question.schema.json"}
+    }
+  }
+}

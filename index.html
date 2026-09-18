@@ -196,12 +196,12 @@ kbd{font:600 12px ui-monospace,monospace;background:var(--panel-2);border:1px so
         </label>
         <label class="modeopt" data-mode="exam">
           <div class="mi">📝</div>
-          <div><b>Exam mode</b><span>Real IPMAT simulation: <b>+4 for correct, −1 for wrong</b>, no feedback until you submit. Best for a realistic dry run.</span></div>
+          <div><b>Exam mode</b><span>Real IPMAT simulation: <b>+3 for correct, −1 for wrong</b>, no feedback until you submit. Best for a realistic dry run.</span></div>
         </label>
       </div>
       <h3 style="margin:20px 0 10px">How this works</h3>
       <ul class="muted" style="margin-top:0;padding-left:20px;line-height:1.7">
-        <li>Every question has <b>one</b> correct option. IPMAT marking: <b>+4</b> correct, <b>−1</b> wrong, <b>0</b> skipped.</li>
+        <li>Every question has <b>one</b> correct option. IPMAT marking: <b>+3</b> correct, <b>−1</b> wrong, <b>0</b> skipped.</li>
         <li>Use <b>Previous / Next</b>, flag doubts with <b>⚑ Flag</b>, and jump with the question palette. The screen <b>auto-scrolls to the top</b> of each question — no manual scrolling.</li>
         <li>In <b>study mode</b> press <b>Check answer</b> to lock and reveal the solution. In <b>exam mode</b> change answers freely until submit.</li>
         <li>Submit to see your <b>raw IPMAT score</b>, accuracy, topic-wise bars, and full solutions. Shortcuts: <kbd>A</kbd>–<kbd>D</kbd> / <kbd>1</kbd>–<kbd>4</kbd> · <kbd>←</kbd>/<kbd>→</kbd> · <kbd>F</kbd> flag.</li>
@@ -218,14 +218,14 @@ kbd{font:600 12px ui-monospace,monospace;background:var(--panel-2);border:1px so
           <span class="status" id="loadStatus"><span class="dot default"></span> Loading…</span>
         </div>
         <div style="font-size:12.5px;color:var(--ink-soft)">
-          Auto-loads <code>ipmat_30q_comprehensive.json</code> from the same folder when present. Custom JSON needs per question: <code>stem</code>, <code>options</code> (≥2), <code>answer</code> (index). Optional: <code>scenario</code> (topic), <code>domain</code>, <code>task</code>, <code>difficulty</code>, <code>explanation</code>, <code>id</code>.
+          Auto-loads <code>papers/mock-01.json</code> (v2: +3/−1, 60Q) from the same folder when present. Custom JSON needs per question: <code>stem</code>, <code>options</code> (4), <code>answer</code> or <code>answer_index</code> (index). Optional: <code>scenario</code> (topic), <code>domain</code>, <code>task</code>, <code>difficulty</code>, <code>explanation</code>, <code>id</code>.
         </div>
         <div class="row hide" id="resetRow">
           <button class="btn ghost" id="resetBtn">↻ Reset to auto-loaded set</button>
         </div>
       </div>
     </div>
-    <p class="footnote">Unofficial practice tool for IPMAT aspirants. Marking follows the IPMAT pattern (+4 / −1). Not affiliated with IIM Indore / Rohtak.</p>
+    <p class="footnote">Unofficial practice tool for IPMAT aspirants. Marking follows the IPMAT pattern (+3 / −1). Not affiliated with IIM Indore / Rohtak.</p>
   </section>
 
   <!-- EXAM -->
@@ -257,7 +257,7 @@ kbd{font:600 12px ui-monospace,monospace;background:var(--panel-2);border:1px so
     <div class="card">
       <div class="scorehead">
         <div class="scoremain">
-          <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:800">IPMAT raw score (+4 / −1)</div>
+          <div class="muted" style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:800">IPMAT raw score (+3 / −1)</div>
           <div style="margin-top:6px"><b class="big" id="rawScore">0</b> <span class="of" id="rawMax">/ 0</span></div>
           <div class="muted" id="scoreDetail" style="margin-top:8px"></div>
           <div class="muted" id="timeDetail" style="margin-top:4px"></div>
@@ -286,12 +286,12 @@ kbd{font:600 12px ui-monospace,monospace;background:var(--panel-2);border:1px so
       <button class="btn primary" id="retakeBtn">↻ Retake exam</button>
       <button class="btn" id="backBtn">← Back to start</button>
     </div>
-    <p class="footnote">Raw score = 4 × correct − 1 × wrong. Skipped = 0. Accuracy = correct ÷ attempted. There is no fixed IPMAT pass mark — compare raw scores across mocks and watch topic bars.</p>
+    <p class="footnote">Raw score = 3 × correct − 1 × wrong. Skipped = 0. Accuracy = correct ÷ attempted. There is no fixed IPMAT pass mark — compare raw scores across mocks and watch topic bars.</p>
   </section>
 </div>
 
 <script>
-window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subtitle": "Demo set · full set auto-loads from ipmat_30q_comprehensive.json", "kind": "mock", "timeLimitSec": 3600, "note": "Place <b>ipmat_container_v5.html</b> in the same folder as <b>ipmat_30q_comprehensive.json</b> — the full 30-question set loads automatically. Or use <b>Choose JSON file…</b> below.", "questions": [
+window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subtitle": "Demo set · full set auto-loads from papers/mock-01.json", "kind": "mock", "timeLimitSec": 3600, "note": "Place <b>index.html</b> in the project root — the assembled 60Q paper loads automatically. Or use <b>Choose JSON file…</b> below.", "questions": [
 {"scenario": "Quadratic Equations", "domain": 1, "task": "QA", "difficulty": "Easy", "stem": "Find the roots of x^2 − 5x + 6 = 0.", "options": ["x = 2 or x = 3", "x = −2 or x = −3", "x = 1 or x = 6", "x = −1 or x = −6"], "answer": 0, "explanation": "(x − 2)(x − 3) = 0, so x = 2 or x = 3.", "id": "demo-q1"},
 {"scenario": "Logarithms", "domain": 1, "task": "QA", "difficulty": "Easy", "stem": "Solve for x if log_5(x) = 3.", "options": ["x = 15", "x = 81", "x = 125", "x = 243"], "answer": 2, "explanation": "x = 5^3 = 125.", "id": "demo-q2"},
 {"scenario": "Probability", "domain": 1, "task": "QA", "difficulty": "Easy", "stem": "A fair die is rolled once. P(prime)?", "options": ["1/6", "1/3", "1/2", "2/3"], "answer": 2, "explanation": "Primes {2,3,5} → 3/6 = 1/2.", "id": "demo-q3"}
@@ -301,14 +301,31 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
 (function(){
   "use strict";
   var CUSTOM_KEY = "ipmat_custom_exam_data";
-  var SIDECAR = "ipmat_30q_comprehensive.json";
+  var SIDECAR = "papers/mock-01.json";
+  var SIDECAR_LEGACY = "ipmat_30q_comprehensive.json";
   var defaultD = window.EXAM_DATA;
-  var D = defaultD;
+  var D = normD(defaultD);
   var Q = D.questions;
   try {
     var raw = localStorage.getItem(CUSTOM_KEY);
-    if (raw) { var parsed = JSON.parse(raw); if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) D = parsed; }
+    if (raw) { var parsed = JSON.parse(raw); if (parsed && Array.isArray(parsed.questions) && parsed.questions.length > 0) D = normD(parsed); }
   } catch(e) {}
+  function normQ(q){
+    if(!q||typeof q!=="object") return q;
+    if(typeof q.answer!=="number" && typeof q.answer_index==="number") q.answer=q.answer_index;
+    if(!q.id && q.qid) q.id=q.qid;
+    if(!q.explanation && q.solution) q.explanation=q.solution;
+    if(!q.scenario && q.topic) q.scenario=(q.section?q.section+" - ":"")+q.topic;
+    if(!q.domain) q.domain=q.section==="QA"?1:(q.section==="VARC"?2:(q.section==="LR"?3:1));
+    return q;
+  }
+  function normD(d){
+    if(!d||typeof d!=="object") return d;
+    if(!d.id && d.paper_id) d.id=d.paper_id;
+    if(d.spec && typeof d.spec.time_sec==="number") d.timeLimitSec=d.spec.time_sec;
+    if(Array.isArray(d.questions)) d.questions=d.questions.map(normQ);
+    return d;
+  }
   var isCustom = (D !== defaultD);
   Q = D.questions;
   var LS = "ipmat_exam_v5_" + D.id;
@@ -341,7 +358,8 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     if(!q||typeof q!=="object") return "Question #"+(i+1)+" is not an object.";
     if(typeof q.stem!=="string"||!q.stem.trim()) return "Question #"+(i+1)+" is missing 'stem'.";
     if(!Array.isArray(q.options)||q.options.length<2) return "Question #"+(i+1)+" must have at least 2 options.";
-    if(typeof q.answer!=="number"||q.answer<0||q.answer>=q.options.length) return "Question #"+(i+1)+" answer must be an index 0–"+(q.options.length-1)+".";
+    if(typeof q.answer!=="number" && typeof q.answer_index==="number") q.answer=q.answer_index;
+    if(typeof q.answer!=="number"||q.answer<0||q.answer>=q.options.length) return "Question #"+(i+1)+" answer/answer_index must be an index 0–"+(q.options.length-1)+".";
     return null;
   }
   function validateSet(data){
@@ -358,9 +376,9 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     el("examTitle").textContent=D.title||"IPMAT Mock";
     el("examSub").textContent=D.subtitle||"Practice Exam";
     el("brandKind").textContent=D.title||"Practice Mock";
-    el("examNote").innerHTML=D.note||"IPMAT marking: <b>+4</b> correct, <b>−1</b> wrong, <b>0</b> skipped.";
+    el("examNote").innerHTML=D.note||"IPMAT marking: <b>+3</b> correct, <b>−1</b> wrong, <b>0</b> skipped.";
     var mins=Math.round((D.timeLimitSec||3600)/60);
-    var facts=[[String(Q.length),"Questions"],[mins+" min","Time limit"],["+4 / −1","IPMAT marking"],[String(maxOptions())+" options","One correct"]];
+    var facts=[[String(Q.length),"Questions"],[mins+" min","Time limit"],["+3 / −1","IPMAT marking"],[String(maxOptions())+" options","One correct"]];
     el("facts").innerHTML=facts.map(function(f){return '<div class="fact"><b>'+esc(f[0])+'</b><span>'+esc(f[1])+'</span></div>';}).join("");
     updateLoadStatus();
     LS = "ipmat_exam_v5_" + D.id;
@@ -377,25 +395,29 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
       s.innerHTML='<span class="dot custom"></span> Auto-loaded: <b>'+esc(D.title||"IPMAT set")+'</b> ('+Q.length+' Q)';
       r.classList.add("hide");
     } else {
-      s.innerHTML='<span class="dot default"></span> Using demo set ('+Q.length+' Q) — add the 30Q JSON for the full mock';
+      s.innerHTML='<span class="dot default"></span> Using demo set ('+Q.length+' Q) — assemble papers/mock-01.json for the full 60Q mock';
       r.classList.add("hide");
     }
   }
 
-  // Auto-load sidecar JSON from same folder (unless a custom file was chosen)
-  if(!isCustom){
-    fetch(SIDECAR, {cache:"no-store"}).then(function(res){
+  // Auto-load assembled paper (v2) or legacy sidecar JSON from same folder (unless a custom file was chosen)
+  function loadSidecar(urls){
+    if(!urls.length){ paintStart(); return; }
+    fetch(urls[0], {cache:"no-store"}).then(function(res){
       if(!res.ok) throw new Error("no sidecar");
       return res.json();
     }).then(function(data){
       var err=validateSet(data);
       if(err) throw new Error(err);
-      D=data; Q=D.questions; state=load()||fresh();
+      D=normD(data); Q=D.questions; state=load()||fresh();
       if(!state.remaining) state.remaining=D.timeLimitSec;
       paintStart();
       if(state.submitted){ showResults(); }
       else if(state.started && !state.submitted){ el("resumeBtn").classList.remove("hide"); }
-    }).catch(function(){ paintStart(); });
+    }).catch(function(){ loadSidecar(urls.slice(1)); });
+  }
+  if(!isCustom){
+    loadSidecar([SIDECAR, SIDECAR_LEGACY]);
   }
   paintStart();
 
@@ -435,7 +457,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
   function enterExam(){
     startScreen.classList.add("hide"); resultScreen.classList.add("hide"); examScreen.classList.remove("hide");
     progWrap.classList.remove("hide"); timerEl.classList.remove("hide");
-    var mt=el("modeTag"); mt.classList.remove("hide"); mt.textContent=isStudy()?"📖 Study mode · +4/−1 on submit":"📝 Exam mode · +4/−1";
+    var mt=el("modeTag"); mt.classList.remove("hide"); mt.textContent=isStudy()?"📖 Study mode · +3/−1 on submit":"📝 Exam mode · +3/−1";
     buildLegend(); buildPalette(); renderQ(); startTimer();
     window.scrollTo(0,0);
   }
@@ -472,7 +494,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
       var cls="opt", mk="";
       if(reveal){
         cls+=" locked";
-        if(k===q.answer){ cls+=" correct"; mk='<span class="mk g">✓ +4</span>'; }
+        if(k===q.answer){ cls+=" correct"; mk='<span class="mk g">✓ +3</span>'; }
         else if(k===picked){ cls+=" wrong"; mk='<span class="mk r">✗ −1 · your answer</span>'; }
       } else if(picked===k){ cls+=" sel"; }
       html+='<div class="'+cls+'" data-k="'+k+'">'+
@@ -481,7 +503,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     html+='</div>';
     if(reveal){
       var ok=picked===q.answer;
-      html+='<div class="fb '+(ok?"ok":"no")+'">'+(ok?"✓ Correct · +4":"✗ Wrong · −1 — correct answer is "+LETTERS(q.answer))+'</div>'+
+      html+='<div class="fb '+(ok?"ok":"no")+'">'+(ok?"✓ Correct · +3":"✗ Wrong · −1 — correct answer is "+LETTERS(q.answer))+'</div>'+
         (q.explanation?'<div class="expl"><b>Solution ('+LETTERS(q.answer)+').</b> '+esc(q.explanation)+'</div>':'');
     }
     qcard.innerHTML=html;
@@ -528,12 +550,12 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
   }
   function rawScore(){
     var s=0;
-    Q.forEach(function(q,idx){ var a=state.answers[q.id||idx]; if(a!==undefined){ s += (a===q.answer?4:-1); } });
+    Q.forEach(function(q,idx){ var a=state.answers[q.id||idx]; if(a!==undefined){ s += (a===q.answer?3:-1); } });
     return s;
   }
   function buildLegend(){
     var h='<span><i class="sw a"></i> Answered</span>';
-    if(isStudy()) h='<span><i class="sw g"></i> Correct (+4)</span><span><i class="sw r"></i> Wrong (−1)</span><span><i class="sw a"></i> Not checked yet</span>';
+    if(isStudy()) h='<span><i class="sw g"></i> Correct (+3)</span><span><i class="sw r"></i> Wrong (−1)</span><span><i class="sw a"></i> Not checked yet</span>';
     h+='<span><i class="sw f"></i> Flagged</span><span><i class="sw"></i> Skipped (0)</span>';
     el("legend").innerHTML=h;
   }
@@ -615,7 +637,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
       else { wrong++; byTopic[t].w++; byDiff[d].w++; }
     });
     var total=Q.length, attempted=correct+wrong;
-    var raw=4*correct-1*wrong, max=4*total;
+    var raw=3*correct-1*wrong, max=3*total;
     var acc=attempted?Math.round(correct/attempted*100):0;
     var pctMax=max?Math.round(raw/max*100):0;
 
@@ -631,7 +653,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     el("verdictBox").innerHTML='<div class="muted" style="font-size:12px">% of max: <b>'+pctMax+'%</b></div><div style="font-weight:800;margin-top:4px">'+esc(tag)+'</div>';
 
     var stats=[
-      [correct,"Correct (+4 each)",""],
+      [correct,"Correct (+3 each)",""],
       [wrong,"Wrong (−1 each)",wrong?"bad":""],
       [skipped,"Skipped (0)",""],
       [attempted+"/"+total,"Attempted",""],
@@ -649,7 +671,7 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
     var keys=Object.keys(map).sort();
     if(!keys.length) return '<div class="muted">No data.</div>';
     return keys.map(function(k){
-      var o=map[k], raw=4*o.c-1*o.w, max=4*o.t;
+      var o=map[k], raw=3*o.c-1*o.w, max=3*o.t;
       var p=max?Math.max(0,Math.round(raw/max*100)):0;
       var col=p>=60?"var(--good)":(p>=40?"var(--warn)":"var(--bad)");
       return '<div class="dbar"><div class="lab"><span><b>'+esc(k)+'</b></span><span class="muted">'+o.c+'✓ '+o.w+'✗ '+o.s+'○ · '+(raw>=0?"+":"")+raw+'/'+max+'</span></div>'+
@@ -669,10 +691,10 @@ window.EXAM_DATA = {"id": "ipmat-demo-3q", "title": "IPMAT Practice Mock", "subt
       var opts="";
       for(var k=0;k<q.options.length;k++){
         var cls="opt locked"; if(k===q.answer) cls+=" correct"; else if(k===picked) cls+=" wrong";
-        var tagtxt=""; if(k===q.answer) tagtxt='<span class="mk g">✓ +4</span>'; else if(k===picked) tagtxt='<span class="mk r">✗ −1 · your answer</span>';
+        var tagtxt=""; if(k===q.answer) tagtxt='<span class="mk g">✓ +3</span>'; else if(k===picked) tagtxt='<span class="mk r">✗ −1 · your answer</span>';
         opts+='<div class="'+cls+'"><span class="key">'+LETTERS(k)+'</span><span class="txt">'+esc(q.options[k])+tagtxt+'</span></div>';
       }
-      var mark = isCorrect?'<span class="pill pass" style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--good-soft);color:var(--good)">Correct +4</span>':(picked===undefined?'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--panel-2);color:var(--ink-soft)">Skipped · 0</span>':'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--bad-soft);color:var(--bad)">Wrong −1</span>');
+      var mark = isCorrect?'<span class="pill pass" style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--good-soft);color:var(--good)">Correct +3</span>':(picked===undefined?'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--panel-2);color:var(--ink-soft)">Skipped · 0</span>':'<span style="display:inline-block;padding:4px 12px;border-radius:999px;font-weight:800;font-size:13px;background:var(--bad-soft);color:var(--bad)">Wrong −1</span>');
       list.innerHTML+='<div class="card rev">'+
         '<div class="qmeta"><span class="qnum">Q'+(idx+1)+'</span><span class="badge d'+(q.domain||1)+'">'+esc(shortDomain(q.domain))+'</span>'+(q.difficulty?'<span class="badge diff">'+esc(q.difficulty)+'</span>':'')+(state.flags[id]?'<span class="badge d3">⚑ flagged</span>':'')+'<div class="spacer"></div>'+mark+'</div>'+
         (q.scenario?'<div style="margin:2px 0 8px"><span class="badge sc">'+esc(q.scenario)+'</span></div>':'')+

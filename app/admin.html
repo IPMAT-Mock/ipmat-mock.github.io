@@ -111,7 +111,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <h3 id="g-papers">Papers tab — paper manager</h3>
     <p class="hint">Every published paper as a card: <b>Breakdown</b> shows difficulty bars, section/topic/subtopic splits, answer balance, schema + bank integrity, and expected-vs-actual rows when a blueprint shares the paper's ID. <b>Unpublish</b> drops the runner listing only (files stay — the paper shows as an orphan and can be re-published). <b>Delete</b> removes the listing and both files after a double confirm. Dashboard rows link here via <b>details →</b>.</p>
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
-    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved. If Gemini answers <b>503 high demand</b>, the server already retried with backoff — just try again later, or switch the model to <code>gemini-2.5-flash</code> (the newest Flash can be capacity-tight at peak).</p>
+    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> makes max 2 API calls with a visible progress bar + elapsed timer (button locks against double-clicks), then parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped, saved qids listed). Nothing invalid is ever saved. On <b>429/503 strain</b> you get the call count, a wait hint (~Xs cooldown) and a Retry button — 1 retry = 1–2 calls. Prefer <code>gemini-2.5-flash</code> (invalid/rare model names drive the AI-Studio failure rate up).</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
     <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p>
     <h3 id="g-students">Students tab — registered accounts</h3>
@@ -182,7 +182,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-llm">
   <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>
-    <p class="hint"><b>Generate</b> sends a section batch prompt (from <code>prompts/</code>) to your chosen provider, parses the returned questions and validates them against the schema. Tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Only schema-valid questions are ever saved. Requires <code>enabled:true</code> in <code>app/llm.config.json</code> plus, per provider: <b>OpenAI-compatible</b> → endpoint + model + API key; <b>Gemini</b> → model + API key only (get one at <code>aistudio.google.com/apikey</code>). Keys never leave that local file.</p>
+    <p class="hint"><b>Generate</b> sends ONE section batch prompt (from <code>prompts/</code>) to your chosen provider — 1 click = max 2 API calls, then it stops and shows a manual <b>Retry</b>. You'll always see progress (preparing → sending → waiting Ns → done/failed with call count + seconds). Tick <b>save valid to bank</b> to append passing questions (duplicates skipped) — saved qids are listed and visible via Questions → Filter. Only schema-valid questions are ever saved. Requires <code>enabled:true</code> in <code>app/llm.config.json</code> plus, per provider: <b>OpenAI-compatible</b> → endpoint + model + API key; <b>Gemini</b> → model + API key only. Use stable <code>gemini-2.5-flash</code> (rare/newer names fail more and burn quota). On 429/503 the server honors the provider's retry hint, then enforces a short cooldown — wait, then Retry, don't double-click.</p>
     <div id="llmStat"></div>
     <div class="row">
       <label title="Which configured provider to call. Missing keys are flagged above.">Provider <span class="q">?</span> <select id="lProv"><option value="openai">OpenAI-compatible</option><option value="gemini">Gemini</option></select></label>
@@ -192,8 +192,9 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <label>Topic mix <input id="lMix" size="30" value="blueprint mix"></label>
       <label><input type="checkbox" id="lSave"> save valid to bank</label>
       <button class="ghost btn" onclick="llmPreview()" title="Show the exact system + user prompts that will be sent — no LLM call is made.">Preview exact prompt</button>
-      <button class="btn" onclick="llmGen()">Generate</button>
+      <button class="btn" id="lGenBtn" onclick="llmGen()">Generate</button>
     </div>
+    <div id="llmProg" style="margin:8px 0"></div>
     <details id="lPromptBox" style="margin:8px 0"><summary class="muted">Exact prompts sent to the LLM (system + user) — click to expand</summary><div id="lPrompt"></div></details>
     <div id="llmOut"></div></div>
 </section>
@@ -243,7 +244,7 @@ async function renameBucket(sec,b){const nb=prompt(`Rename bucket ${sec}/${b} to
 async function delBucket(sec,b){if(!confirm(`Delete bucket ${sec}/${b}? Blocked if questions or blueprints use it.`))return;
   const{st,j}=await api("POST","/api/topics",{action:"delete",section:sec,bucket:b});
   if(st!==200){alert(j.errors.join("; "));return;}await loadTopics();}
-async function api(m,u,b){const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));return{st:r.status,j};}
+async function api(m,u,b){try{const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));return{st:r.status,j};}catch(e){return{st:0,j:{errors:["network/server unreachable: "+(e&&e.message||e)+". Is Flask running on :5057?"]}};}}
 /* section + difficulty pills: QA=blue, LR=amber, VARC=green; Easy/Medium/Hard green/amber/red */
 function secPill(s){return ["QA","LR","VARC"].includes(s)?`<span class="pill sec-${s}">${s}</span>`:s;}
 function difPill(d){return ["Easy","Medium","Hard"].includes(d)?`<span class="pill dif-${d}">${d}</span>`:d;}
@@ -409,11 +410,42 @@ function llmParams(){return new URLSearchParams({section:$("lSec").value,count:$
 async function llmPreview(){const{st,j}=await api("GET","/api/llm/prompt?"+llmParams());
   $("lPromptBox").open=true;
   $("lPrompt").innerHTML=st===200?`<h3>System prompt <span class="muted">(prompts/generator-system.md)</span></h3><pre>${j.system.replace(/</g,"&lt;")}</pre><h3>User prompt <span class="muted">(prompts/${$("lSec").value}-batch.md, [N]/[DIFFICULTY]/[TOPIC-MIX] substituted)</span></h3><pre>${j.user.replace(/</g,"&lt;")}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;}
-async function llmGen(){await llmPreview();
-  const{st,j}=await api("POST","/api/llm/generate",{provider:$("lProv").value,section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked});
-  $("llmOut").innerHTML=st===200||j.questions?`${(j.errors||[]).map(e=>`<p class="err">${e}</p>`).join("")}<p class="${j.ok?"ok":"err"}">${j.provider?`via ${j.provider} · `:""}${(j.questions||[]).length} questions parsed${j.saved&&j.saved.length?`, saved: ${j.saved.join(", ")}`:""}</p><pre>${JSON.stringify(j.questions||[],null,1).slice(0,6000)}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;
-  $("llmOut").innerHTML=st===200||j.questions?`${(j.errors||[]).map(e=>`<p class="err">${e}</p>`).join("")}<p class="${j.ok?"ok":"err"}">${(j.questions||[]).length} questions parsed${j.saved&&j.saved.length?`, saved: ${j.saved.join(", ")}`:""}</p><pre>${JSON.stringify(j.questions||[],null,1).slice(0,6000)}</pre>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;
-  if(j.saved&&j.saved.length)dash();}
+let llmBusy=false,llmCooldownUntil=0;
+async function llmGen(){
+  if(llmBusy)return;
+  if(Date.now()<llmCooldownUntil){const s=Math.ceil((llmCooldownUntil-Date.now())/1000);
+    $("llmProg").innerHTML=`<p class="err">Cooling down — wait ~${s}s before retrying (protects your Gemini quota).</p>`;return;}
+  llmBusy=true;const btn=$("lGenBtn");if(btn){btn.disabled=true;btn.textContent="Generating…";}
+  const t0=Date.now();
+  $("llmProg").innerHTML=`<p class="muted">① Preparing prompt…</p>`;
+  try{await llmPreview();}catch(e){}
+  $("llmProg").innerHTML=`<p class="muted">② Sending <b>1 request</b> to ${$("lProv").value} (count ${$("lN").value||"5"}) — waiting… <span id="llmTimer">0s</span></p><progress id="llmBar" max="100" value="0" style="width:100%"></progress><p class="muted">Gemini can take 20–60s. Button is locked so double-clicks can't hammer your quota.</p>`;
+  const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);const t=$("llmTimer");if(t)t.textContent=s+"s";
+    const bar=$("llmBar");if(bar)bar.value=Math.min(95,s*3);},500);
+  let st,j;
+  try{
+    ({st,j}=await api("POST","/api/llm/generate",{provider:$("lProv").value,section:$("lSec").value,count:parseInt($("lN").value||"5"),difficulty:$("lDiff").value,topic_mix:$("lMix").value,save:$("lSave").checked}));
+  }catch(e){st=0;j={errors:["request failed: "+(e&&e.message||e)]};}
+  clearInterval(tick);
+  const secs=Math.round((Date.now()-t0)/1000);
+  const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  j=j||{};
+  const calls=j.attempts!=null?` · ${j.attempts} API call(s)`:"";
+  const retryBtn=(st===502||st===0)?`<button class="btn" onclick="llmGen()">Retry (1 call)</button>`:"";
+  if(st===200||j.questions){
+    const errs=(j.errors||[]).map(e=>`<p class="err">${esc(e)}</p>`).join("");
+    const saved=(j.saved&&j.saved.length)?`, saved to bank: <b>${j.saved.map(esc).join(", ")}</b> — check the <b>Questions</b> tab (Filter) to see them`:(($("lSave").checked)?`, <span class="err">nothing saved</span> (validation failed or all qids duplicated — fix errors above and retry)`:` <span class="muted">(not saved — tick “save valid to bank” to append)</span>`);
+    $("llmOut").innerHTML=`${errs}<p class="${j.ok?"ok":"err"}">${j.provider?`via ${esc(j.provider)}${calls} · `:""}${(j.questions||[]).length} questions parsed in ${secs}s${saved}</p>${retryBtn}<pre>${esc(JSON.stringify(j.questions||[],null,1)).slice(0,6000)}</pre>`;
+    $("llmProg").innerHTML=`<p class="${j.ok?"ok":"muted"}">Done in ${secs}s${calls}. ${j.ok?"Review above, then Filter in Questions tab.":"See errors above."}</p>`;
+    if(j.saved&&j.saved.length)dash();
+  }else{
+    const wait=j.retry_after||30;
+    llmCooldownUntil=Date.now()+Math.min(60000,wait*1000);
+    $("llmOut").innerHTML=`<p class="err">${((j.errors||["failed"]).map(esc).join("; "))}${calls}</p><p class="muted">To protect quota: 1 click = max 2 calls, then a ~${wait}s cooldown. ${retryBtn}</p>`;
+    $("llmProg").innerHTML=`<p class="err">Failed after ${secs}s${calls}. Wait ~${wait}s, then Retry — or switch model to <code>gemini-2.5-flash</code>.</p>`;
+  }
+  llmBusy=false;if(btn){btn.disabled=false;btn.textContent="Generate";}
+}
 async function loadCfg(){const{st,j}=await api("GET","/api/config");$("cTime").value=j.time_sec;
   $("cSecs").innerHTML=j.sections.map(s=>`<div class="row"><b>${s.code}</b><label>count <input data-sec="${s.code}" size="4" value="${s.count}"></label></div>`).join("");}
 async function saveCfg(){const body={time_sec:parseInt($("cTime").value||"8100"),marking:{correct:3,wrong:-1,skipped:0},answer_balance_tolerance:2,

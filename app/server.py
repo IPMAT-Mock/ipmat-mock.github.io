@@ -1021,25 +1021,59 @@ def _provider_error(r):
     return (r.text or "")[:300]
 
 
-def _post_with_retry(url, headers, payload, tries=3):
-    """POST with backoff on transient provider strain (429/503/timeout)."""
+def _retry_hint_seconds(r, default):
+    """Honor the provider's own backoff hint (Retry-After / retryDelay).
+
+    Gemini 503s often carry e.g. details.retryDelay:"30s". Respecting it
+    (capped) beats blind hammering and keeps AI-Studio error rates down.
+    """
+    try:
+        if r.headers.get("Retry-After"):
+            return min(60, max(1, int(float(r.headers["Retry-After"]))))
+    except Exception:
+        pass
+    try:
+        details = ((r.json() or {}).get("error") or {}).get("details") or []
+        for d in details:
+            rd = (d or {}).get("retryDelay", "")
+            if rd and str(rd).rstrip("s").replace(".", "", 1).isdigit():
+                return min(60, max(1, int(float(str(rd).rstrip("s")))))
+    except Exception:
+        pass
+    return default
+
+
+def _post_with_retry(url, headers, payload, tries=2):
+    """POST with at most ONE automatic retry on transient strain (429/503).
+
+    Single Generate click = max 2 provider calls (not 3+). Honors the
+    provider's Retry-After/retryDelay hint (capped at 60s) with a small
+    fallback backoff, then gives up so the UI can show a manual Retry
+    button + wait guidance instead of hammering a strained model.
+    Returns (response, attempts_made).
+    """
+    import random
     import time
     import requests
     last = None
+    attempts = 0
     for attempt in range(tries):
         try:
-            r = requests.post(url, headers=headers, json=payload, timeout=120)
+            attempts += 1
+            r = requests.post(url, headers=headers, json=payload, timeout=60)
             if r.status_code not in (429, 503):
-                return r
+                return r, attempts
             last = r
         except (requests.exceptions.Timeout,
                 requests.exceptions.ConnectionError) as e:
             last = e
         if attempt < tries - 1:
-            time.sleep(8 if attempt == 0 else 20)
+            wait = _retry_hint_seconds(
+                last, 10) if not isinstance(last, BaseException) else 10
+            time.sleep(wait + random.uniform(0, 2))
     if isinstance(last, BaseException):
         raise last
-    return last
+    return last, attempts
 
 
 @app.post("/api/llm/generate")
@@ -1067,12 +1101,18 @@ def llm_generate():
             url, headers, payload = _gemini_request(pconf, system, user)
         else:
             url, headers, payload = _openai_request(pconf, system, user)
-        r = _post_with_retry(url, headers, payload)
+        r, attempts = _post_with_retry(url, headers, payload)
         if r.status_code in (429, 503):
+            wait = _retry_hint_seconds(r, 30)
             return jsonify({"ok": False, "errors": [
                 f"LLM call failed ({prov_name}): {r.status_code} "
-                f"{_provider_error(r)} (provider strain — usually temporary; "
-                f"retry, or switch model, e.g. gemini-2.5-flash)"]}), 502
+                f"{_provider_error(r)} — provider strained after "
+                f"{attempts} call(s). Wait ~{wait}s, then press Retry "
+                f"(1 call per retry). If it persists, switch model to "
+                f"gemini-2.5-flash (stable Flash; newer/rarer names are "
+                f"capacity-tight or invalid)."],
+                "attempts": attempts, "retry_after": wait,
+                "provider": prov_name}), 502
         r.raise_for_status()
         if prov_name == "gemini":
             text = _gemini_text(r.json())
@@ -1094,6 +1134,7 @@ def llm_generate():
             saved.append(x.get("qid"))
     return jsonify({"ok": not errs, "questions": questions, "errors": errs,
                     "saved": saved, "raw": text[:4000], "provider": prov_name,
+                    "attempts": attempts,
                     "sent": {"system": system, "user": user}})
 
 

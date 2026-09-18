@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="guide">Guide</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="guide">Guide</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" onclick="goAuthoring()" title="How to add new questions manually, without the LLM">📖 Adding questions</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -81,7 +81,16 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <table><tr><th>Message</th><th>Fix</th></tr>
     <tr><td><code>bank short for QA/Arithmetic: need 20, have 13</code></td><td>Add questions (Questions tab or LLM tab), lower the count, or switch to section mix.</td></tr>
     <tr><td><code>difficulty Easy: want 20, got 19 (warning)</code></td><td>Bank spread is thin for that bucket — preview still usable; add Easy questions of that topic to silence it.</td></tr>
-    <tr><td>Validation error on publish</td><td>Read the listed line: schema breach (fix the question), marking drift, duplicate qid, or count mismatch.</td></tr></table></div>
+    <tr><td>Validation error on publish</td><td>Read the listed line: schema breach (fix the question), marking drift, duplicate qid, or count mismatch.</td></tr></table>
+    <h3 id="authoring">Adding new questions without AI</h3>
+    <p class="hint">New questions are authored <b>manually</b> — no LLM involved. Flow: Questions tab → <b>Insert template</b> → fill in the fields → <b>Validate &amp; append to bank</b>. The server schema-checks, rejects duplicate qids and unknown topics, then appends to <code>bank/&lt;section&gt;.jsonl</code>. Saved questions are usable in assembly immediately (Dashboard coverage updates).</p>
+    <table><tr><th>Field</th><th>Rule</th></tr>
+    <tr><td><code>qid</code></td><td>Unique id, e.g. <code>QA-ARITH-014</code>. Duplicates are rejected.</td></tr>
+    <tr><td><code>section</code> / <code>difficulty</code></td><td><code>QA|LR|VARC</code> and <code>Easy|Medium|Hard</code> exactly.</td></tr>
+    <tr><td><code>topic</code></td><td>Must be a taxonomy bucket or alias (see Topics tab), otherwise assembly mixes can't find it.</td></tr>
+    <tr><td><code>stem</code> / <code>options</code> / <code>answer_index</code></td><td>Stem ≥ 10 chars; exactly 4 non-empty options; <code>answer_index</code> 0–3.</td></tr>
+    <tr><td><code>marks</code> / <code>time_sec</code></td><td>Locked to <code>+3 / −1 / 0</code>; time 30–600 s.</td></tr>
+    <tr><td><code>solution</code> / <code>hint</code></td><td>Solution (full explanation) is <b>required</b>; hint (short nudge) is recommended. Both show in the bank detail view.</td></tr></table></div>
 </section>
 <section class="tab" id="t-topics">
   <div class="card"><h2>Topic taxonomy <span class="muted">config/topics.json — single source of truth</span></h2>
@@ -147,6 +156,11 @@ document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
   b.classList.add("on");$("t-"+b.dataset.t).classList.add("on");});
+function goAuthoring(){document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  document.querySelector('#tabs button[data-t="guide"]').classList.add("on");
+  $("t-guide").classList.add("on");
+  $("authoring").scrollIntoView();}
 let TAX={};
 async function loadTopics(){const{st,j}=await api("GET","/api/topics");if(st!==200)return;
   TAX=j.taxonomy;

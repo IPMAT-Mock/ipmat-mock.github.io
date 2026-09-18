@@ -15,6 +15,7 @@ Bank: 77 questions (47 QA incl. Arithmetic + DI backfill, 15 LR, 15 VARC).
 - `scripts/` — `banklib.py` (shared: mix-aware assembly, validation), `validate_paper.py`, `assemble_paper.py`, `migrate_legacy.py`
 - `app/` — admin: Flask `server.py` (http://127.0.0.1:5057), `admin.html`, `llm.config.json` (LLM loop opt-in, default off)
 - `config/exam.config.json` — time/marking/sections
+- `config/topics.json` — topic taxonomy (buckets, labels, subtopics, aliases); manage in the admin Topics tab
 
 ## Setup
 ```powershell

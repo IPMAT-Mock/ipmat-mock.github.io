@@ -1,0 +1,145 @@
+{
+  "LR": {
+    "buckets": {
+      "Arrangements": {
+        "aliases": [],
+        "label": "Arrangements",
+        "subtopics": [
+          "Seating Arrangements",
+          "Puzzle Grids",
+          "Days & Rankings"
+        ]
+      },
+      "CriticalReasoning": {
+        "aliases": [],
+        "label": "Critical Reasoning",
+        "subtopics": [
+          "Syllogisms",
+          "Blood Relations",
+          "Cause-Effect",
+          "Inference"
+        ]
+      },
+      "Series_Coding": {
+        "aliases": [],
+        "label": "Sequences & Coding",
+        "subtopics": [
+          "Number/Letter Series",
+          "Coding-Decoding",
+          "Analogies",
+          "Clocks",
+          "Calendars"
+        ]
+      }
+    },
+    "label": "Logical Reasoning"
+  },
+  "QA": {
+    "buckets": {
+      "Algebra": {
+        "aliases": [
+          "Quantitative Aptitude - Quadratic Equations",
+          "Quantitative Aptitude - Linear Equations",
+          "Quantitative Aptitude - Logarithms",
+          "Quantitative Aptitude - Arithmetic Progressions",
+          "Quantitative Aptitude - Geometric Progressions",
+          "Quantitative Aptitude - Functions & Graphs",
+          "Quantitative Aptitude - Inequalities"
+        ],
+        "label": "Algebra",
+        "subtopics": [
+          "Linear Equations",
+          "Quadratic Equations",
+          "Progressions",
+          "Functions & Graphs",
+          "Inequalities",
+          "Logarithms"
+        ]
+      },
+      "Arithmetic": {
+        "aliases": [],
+        "label": "Arithmetic",
+        "subtopics": [
+          "Percentages",
+          "Profit & Loss",
+          "Interest",
+          "Ratio & Proportion",
+          "Averages",
+          "Time-Speed-Distance",
+          "Time & Work"
+        ]
+      },
+      "DataInterpretation": {
+        "aliases": [],
+        "label": "Data Interpretation",
+        "subtopics": [
+          "Tables",
+          "Bar Graphs",
+          "Pie Charts",
+          "Line Graphs"
+        ]
+      },
+      "ModernMath_Geometry": {
+        "aliases": [
+          "Quantitative Aptitude - Permutations & Combinations",
+          "Quantitative Aptitude - Probability",
+          "Quantitative Aptitude - Number System"
+        ],
+        "label": "Modern Math & Geometry",
+        "subtopics": [
+          "Permutation & Combination",
+          "Probability",
+          "Number Systems",
+          "Geometry",
+          "Mensuration"
+        ]
+      }
+    },
+    "label": "Quantitative Aptitude"
+  },
+  "VARC": {
+    "buckets": {
+      "Grammar": {
+        "aliases": [],
+        "label": "Grammar & Usage",
+        "subtopics": [
+          "Error Spotting",
+          "Sentence Correction",
+          "Agreement",
+          "Tenses",
+          "Prepositions"
+        ]
+      },
+      "ReadingComprehension": {
+        "aliases": [],
+        "label": "Reading Comprehension",
+        "subtopics": [
+          "Passages",
+          "Inference",
+          "Vocabulary-in-context"
+        ]
+      },
+      "VerbalLogic": {
+        "aliases": [],
+        "label": "Verbal Ability & Logic",
+        "subtopics": [
+          "Para-jumbles",
+          "Paragraph Summary",
+          "Odd-one-out"
+        ]
+      },
+      "Vocabulary": {
+        "aliases": [],
+        "label": "Vocabulary",
+        "subtopics": [
+          "Synonyms",
+          "Antonyms",
+          "Idioms",
+          "Phrases",
+          "Fill-in-the-blanks"
+        ]
+      }
+    },
+    "label": "Verbal Ability & Reading Comprehension"
+  }
+}

@@ -29,6 +29,52 @@ QA_TOPIC_BUCKET = {
 
 TOPIC_BUCKET = {"QA": QA_TOPIC_BUCKET, "LR": {}, "VARC": {}}
 
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+TAXONOMY_PATH = ROOT / "config" / "topics.json"
+_taxonomy_cache = None
+
+
+def _default_taxonomy():
+    """Built-in fallback when config/topics.json is missing (keeps CLI usable)."""
+    return {
+        "QA": {"label": "Quantitative Aptitude", "buckets": {
+            "Arithmetic": {"label": "Arithmetic", "subtopics": [], "aliases": []},
+            "Algebra": {"label": "Algebra", "subtopics": [],
+                        "aliases": sorted(QA_TOPIC_BUCKET)},
+            "ModernMath_Geometry": {"label": "Modern Math & Geometry",
+                                    "subtopics": [], "aliases": []},
+            "DataInterpretation": {"label": "Data Interpretation",
+                                   "subtopics": [], "aliases": []}}},
+        "LR": {"label": "Logical Reasoning", "buckets": {
+            b: {"label": b, "subtopics": [], "aliases": []}
+            for b in ("Arrangements", "Series_Coding", "CriticalReasoning")}},
+        "VARC": {"label": "Verbal Ability & Reading Comprehension", "buckets": {
+            b: {"label": b, "subtopics": [], "aliases": []}
+            for b in ("ReadingComprehension", "VerbalLogic", "Grammar", "Vocabulary")}},
+    }
+
+
+def load_taxonomy(path=None, refresh=False):
+    """Load config/topics.json (cached); fall back to built-ins if missing."""
+    global _taxonomy_cache
+    if _taxonomy_cache is not None and not refresh and path is None:
+        return _taxonomy_cache
+    p = pathlib.Path(path) if path else TAXONOMY_PATH
+    try:
+        tax = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        tax = _default_taxonomy()
+    if path is None and not refresh:
+        _taxonomy_cache = tax
+    return tax
+
+
+def taxonomy_buckets(taxonomy=None):
+    """{section: [bucket, ...]} from the taxonomy."""
+    tax = taxonomy or load_taxonomy()
+    return {s: list(tax.get(s, {}).get("buckets", {})) for s in SECTIONS
+            if s in tax}
+
 
 class BankShortage(Exception):
     def __init__(self, message, details=None):
@@ -55,13 +101,37 @@ def load_bank(bank_dir):
     return qs
 
 
-def bucket_of(q):
-    """Blueprint mix bucket for a bank question."""
+def bucket_of(q, taxonomy=None):
+    """Blueprint mix bucket for a bank question.
+
+    A question's `topic` resolves to a bucket when it equals the bucket name
+    or one of its taxonomy aliases (legacy QA names). Unknown topics fall
+    through as-is so validators can flag them instead of crashing assembly.
+    """
     sec, topic = q.get("section"), q.get("topic")
-    if topic in (TOPIC_BUCKET.get(sec) or {}):
-        return (TOPIC_BUCKET[sec] or {})[topic]
+    tax = taxonomy or load_taxonomy()
+    for bucket, info in tax.get(sec, {}).get("buckets", {}).items():
+        if topic == bucket or topic in (info.get("aliases") or []):
+            return bucket
+    if topic in (TOPIC_BUCKET.get(sec) or {}):  # built-in fallback map
+        return TOPIC_BUCKET[sec][topic]
     # LR/VARC seeds (and new backfill) already use bucket names as topics.
     return topic
+
+
+def unmapped_topics(pool, taxonomy=None):
+    """Topics in the bank that match no taxonomy bucket/alias (need attention)."""
+    tax = taxonomy or load_taxonomy()
+    known = {(s, b) for s in SECTIONS
+             for b in tax.get(s, {}).get("buckets", {})}
+    known |= {(s, a) for s in SECTIONS
+              for b, i in tax.get(s, {}).get("buckets", {}).items()
+              for a in (i.get("aliases") or [])}
+    bad = Counter()
+    for q in pool:
+        if (q.get("section"), q.get("topic")) not in known:
+            bad[(q.get("section"), q.get("topic"))] += 1
+    return [{"section": s, "topic": t, "count": n} for (s, t), n in sorted(bad.items())]
 
 
 def bank_stats(pool):

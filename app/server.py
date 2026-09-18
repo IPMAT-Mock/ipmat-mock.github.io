@@ -95,9 +95,24 @@ def bank_add():
     pool = _pool()
     if any(x.get("qid") == q.get("qid") for x in pool):
         return jsonify({"ok": False, "errors": [f"duplicate qid {q.get('qid')}"]}), 422
+    tax = _taxonomy()
+    known = {b for b in tax.get(q.get("section"), {}).get("buckets", {})}
+    known |= {a for b, i in tax.get(q.get("section"), {}).get("buckets", {}).items()
+              for a in (i.get("aliases") or [])}
+    if q.get("topic") not in known:
+        return jsonify({"ok": False, "errors": [
+            f"unknown topic '{q.get('topic')}' for {q.get('section')}. " +
+            f"Valid: {sorted(known) or 'none — define buckets in the Topics tab first'}"]}), 422
     target = BANK_DIR / BANK_FILE.get(q.get("section"), "qa.jsonl")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    prefix = ""
+    if target.exists() and target.stat().st_size:
+        with target.open("rb") as f:
+            f.seek(-1, 2)
+            if f.read(1) != b"\n":  # last line unterminated -> separate it
+                prefix = "\n"
     with target.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(q, ensure_ascii=False) + "\n")
+        f.write(prefix + json.dumps(q, ensure_ascii=False) + "\n")
     return jsonify({"ok": True, "qid": q.get("qid"), "file": target.name})
 
 
@@ -152,6 +167,149 @@ def assemble():
         return jsonify({"ok": False, "errors": [str(e)],
                         "shortage": e.details}), 422
     return jsonify({"ok": True, "paper": paper, "warnings": warnings})
+
+
+# ---------------- topics ----------------
+
+TAXONOMY_PATH = ROOT / "config" / "topics.json"
+BUCKET_RE = __import__("re").compile(r"^[A-Za-z][A-Za-z0-9_]{1,39}$")
+
+
+def _taxonomy():
+    return banklib.load_taxonomy(refresh=True)
+
+
+def _save_taxonomy(tax):
+    _write_json(TAXONOMY_PATH, tax)
+    banklib.load_taxonomy(refresh=True)
+
+
+def _bucket_usage(pool, tax):
+    use = {}
+    for q in pool:
+        key = (q.get("section"), banklib.bucket_of(q, tax))
+        use[key] = use.get(key, 0) + 1
+    return use
+
+
+@app.get("/api/topics")
+def topics_get():
+    tax = _taxonomy()
+    pool = _pool()
+    use = _bucket_usage(pool, tax)
+    out = {}
+    for sec, info in tax.items():
+        out[sec] = {"label": info.get("label", sec), "buckets": {}}
+        for b, bi in info.get("buckets", {}).items():
+            out[sec]["buckets"][b] = {
+                "label": bi.get("label", b),
+                "subtopics": bi.get("subtopics", []),
+                "aliases": bi.get("aliases", []),
+                "questions": use.get((sec, b), 0)}
+    return jsonify({"taxonomy": out,
+                    "unmapped": banklib.unmapped_topics(pool, tax)})
+
+
+@app.post("/api/topics")
+def topics_post():
+    """Manage buckets. Actions:
+    add {section, bucket, label?, subtopics?, aliases?}
+    update {section, bucket, label?, subtopics?, aliases?}
+    rename {section, bucket, new_bucket} (migrates bank topics + blueprint mix keys)
+    delete {section, bucket} (blocked when questions or blueprints use it)
+    """
+    import yaml
+    body = request.get_json(force=True) or {}
+    action = body.get("action", "")
+    sec = body.get("section", "")
+    bucket = body.get("bucket", "")
+    tax = _taxonomy()
+    if sec not in tax:
+        return jsonify({"ok": False, "errors": [f"unknown section {sec}"]}), 422
+    buckets = tax[sec].setdefault("buckets", {})
+
+    def _clean_list(v):
+        return [x.strip() for x in (v or []) if x and x.strip()]
+
+    if action in ("add", "update"):
+        if not BUCKET_RE.match(bucket or ""):
+            return jsonify({"ok": False, "errors": [
+                "bucket key must start with a letter, letters/digits/_ only, max 40 chars"]}), 422
+        if action == "add" and bucket in buckets:
+            return jsonify({"ok": False, "errors": [f"{bucket} already exists"]}), 422
+        if action == "update" and bucket not in buckets:
+            return jsonify({"ok": False, "errors": [f"{bucket} not found"]}), 422
+        cur = buckets.get(bucket, {})
+        buckets[bucket] = {"label": (body.get("label") or "").strip() or bucket,
+                           "subtopics": _clean_list(body.get("subtopics")),
+                           "aliases": _clean_list(body.get("aliases"))}
+        # aliases must not collide with other buckets/aliases in the section
+        seen = {}
+        for b, bi in buckets.items():
+            for name in [b] + bi.get("aliases", []):
+                if name in seen:
+                    buckets[bucket] = cur  # roll back
+                    return jsonify({"ok": False, "errors": [
+                        f"name clash: '{name}' already used by {seen[name]}"]}), 422
+                seen[name] = b
+        _save_taxonomy(tax)
+        return jsonify({"ok": True, "bucket": bucket})
+
+    if action == "rename":
+        new = body.get("new_bucket", "")
+        if bucket not in buckets:
+            return jsonify({"ok": False, "errors": [f"{bucket} not found"]}), 422
+        if not BUCKET_RE.match(new or "") or new in buckets:
+            return jsonify({"ok": False, "errors": [f"bad or taken name {new}"]}), 422
+        moved_q, moved_bp = 0, 0
+        for f in sorted(BANK_DIR.rglob("*.jsonl")):
+            lines = f.read_text(encoding="utf-8").splitlines()
+            changed = False
+            for i, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                q = json.loads(line)
+                if q.get("section") == sec and q.get("topic") == bucket:
+                    q["topic"] = new
+                    lines[i] = json.dumps(q, ensure_ascii=False)
+                    moved_q += 1
+                    changed = True
+            if changed:
+                f.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        for f in sorted((ROOT / "blueprints").glob("*.yaml")):
+            bp = yaml.safe_load(f.read_text(encoding="utf-8"))
+            dirty = False
+            for s in bp.get("sections", []):
+                if s.get("code") == sec and isinstance(s.get("mix"), dict) \
+                        and bucket in s["mix"]:
+                    s["mix"][new] = s["mix"].pop(bucket)
+                    dirty = True
+            if dirty:
+                f.write_text(yaml.safe_dump(bp, sort_keys=False, allow_unicode=True),
+                             encoding="utf-8")
+                moved_bp += 1
+        buckets[new] = buckets.pop(bucket)
+        _save_taxonomy(tax)
+        return jsonify({"ok": True, "renamed": f"{bucket} -> {new}",
+                        "questions_moved": moved_q, "blueprints_touched": moved_bp})
+
+    if action == "delete":
+        if bucket not in buckets:
+            return jsonify({"ok": False, "errors": [f"{bucket} not found"]}), 422
+        pool = _pool()
+        nq = sum(1 for q in pool if q.get("section") == sec
+                 and banklib.bucket_of(q, tax) == bucket)
+        bps = [f.name for f in sorted((ROOT / "blueprints").glob("*.yaml"))
+               if bucket in str(f.read_text(encoding="utf-8"))]
+        if nq or bps:
+            return jsonify({"ok": False, "errors": [
+                f"in use: {nq} bank question(s)" +
+                (f", blueprints: {', '.join(bps)}" if bps else "") +
+                " — move or delete them first"]}), 422
+        buckets.pop(bucket)
+        _save_taxonomy(tax)
+        return jsonify({"ok": True, "deleted": bucket})
+    return jsonify({"ok": False, "errors": [f"unknown action {action}"]}), 422
 
 
 # ---------------- papers / publish ----------------

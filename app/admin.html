@@ -23,6 +23,9 @@ textarea{width:100%;font-family:ui-monospace,monospace;font-size:12.5px}
 button.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-size:14px}
 button.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
 .ok{color:var(--ok);font-weight:700}.err{color:var(--err);font-weight:700}.muted{color:var(--soft);font-size:13px}
+.hint{font-size:12.5px;color:var(--soft);background:#faf7f1;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;margin:0 0 12px}
+.hint b{color:var(--ink)}
+span.q{display:inline-block;width:15px;height:15px;line-height:15px;text-align:center;font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:50%;cursor:help;margin-left:4px}
 .tab{display:none}.tab.on{display:block}
 pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:auto;font-size:12.5px;max-height:300px}
 .stem{max-width:560px}
@@ -32,38 +35,55 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/../public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
+  <p class="hint"><b>Dashboard</b> — read-only overview. The coverage table shows how many bank questions exist per topic bucket and difficulty; use it to judge whether a paper spec is feasible <em>before</em> assembling. Published papers open directly in the test runner.</p>
   <div class="card"><h2>Bank coverage <span class="muted" id="bankTotal"></span></h2><div id="stats"></div></div>
   <div class="card"><h2>Published papers</h2><div id="papers"></div></div>
 </section>
 <section class="tab" id="t-bank">
   <div class="card"><h2>Browse bank</h2>
+    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter.</p>
     <div class="row">
-      <label>Section <select id="fSec"><option value="">all</option><option>QA</option><option>LR</option><option>VARC</option></select></label>
-      <label>Topic <input id="fTopic" placeholder="e.g. Arithmetic" size="18"></label>
-      <label>Difficulty <select id="fDiff"><option value="">all</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
-      <label>Search <input id="fQ" placeholder="stem or qid" size="20"></label>
+      <label title="Restrict to one section, or leave as all.">Section <select id="fSec"><option value="">all</option><option>QA</option><option>LR</option><option>VARC</option></select></label>
+      <label title="Blueprint bucket, e.g. Arithmetic, Arrangements, ReadingComprehension.">Topic <input id="fTopic" placeholder="e.g. Arithmetic" size="18"></label>
+      <label title="Restrict to one difficulty level, or leave as all.">Difficulty <select id="fDiff"><option value="">all</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
+      <label title="Free text matched against the question stem and qid.">Search <input id="fQ" placeholder="stem or qid" size="20"></label>
       <button class="btn" onclick="loadBank()">Filter</button>
     </div><div id="bankOut"></div></div>
   <div class="card"><h2>Add question</h2>
+    <p class="hint"><b>Add</b> — appends <b>one</b> question to the bank after schema validation. Required: unique <code>qid</code> (e.g. <code>QA-ARITH-014</code>), <code>section</code> (QA/LR/VARC), <code>topic</code> (use a bucket name so mixes can find it), <code>difficulty</code> (Easy/Medium/Hard), <code>stem</code>, 4 <code>options</code>, <code>answer_index</code> (0–3), <code>solution</code>. New questions become usable in papers immediately.</p>
     <p class="muted">Paste one v2 question JSON. <button class="ghost btn" onclick="fillTemplate()">Insert template</button></p>
     <textarea id="newQ" rows="12" placeholder='{"qid": "...", ...}'></textarea>
     <div class="row"><button class="btn" onclick="addQ()">Validate &amp; append to bank</button><span id="addMsg"></span></div></div>
 </section>
+<section class="tab" id="t-topics">
+  <div class="card"><h2>Topic taxonomy <span class="muted">config/topics.json — single source of truth</span></h2>
+    <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. <b>Label</b> is the display name. <b>Subtopics</b> document syllabus coverage. <b>Aliases</b> let old topic names (e.g. legacy <code>Quantitative Aptitude - …</code>) keep resolving to a bucket. <b>Rename</b> migrates bank questions + blueprint mixes automatically. <b>Delete</b> is blocked while questions or blueprints use the bucket. Changes apply to assembly immediately.</p>
+    <div id="unmapped"></div><div id="topics"></div>
+    <h3>Add bucket</h3>
+    <div class="row">
+      <label>Section <select id="tSec"><option>QA</option><option>LR</option><option>VARC</option></select></label>
+      <label title="Key used in blueprint mixes: letters/digits/underscore, e.g. ModernMath_Geometry.">Key <span class="q">?</span> <input id="tKey" size="22" placeholder="e.g. Mensuration"></label>
+      <label>Label <input id="tLabel" size="22" placeholder="display name"></label>
+      <button class="btn" onclick="addBucket()">Add</button><span id="tMsg"></span>
+    </div></div>
+</section>
 <section class="tab" id="t-wizard">
   <div class="card"><h2>New paper</h2>
+    <p class="hint"><b>How it works:</b> ① choose an exam kind and a source → ② <b>Assemble</b> previews the paper (topic mix, difficulty split, warnings — nothing is saved yet) → ③ <b>Publish</b> validates and adds it to the runner. If the bank can't satisfy a spec you'll get a "bank short" message telling you exactly which topic needs more questions.</p>
     <div class="row">
-      <label>Exam kind <select id="wKind"><option value="full_mock">Mock</option><option value="simulation">Simulation (strict, review-after-submit)</option><option value="practice">Practice</option></select></label>
-      <label>Source <select id="wSrc" onchange="srcFlip()"><option value="blueprint">Saved blueprint</option><option value="custom">Custom spec</option></select></label>
-      <label>Title <input id="wTitle" size="24" value="IPMAT Custom Paper"></label>
-      <label>Seed <input id="wSeed" size="6" value="42"></label>
+      <label title="Mock = standard timed paper. Simulation = exam-day strict mode (no hints/pauses, solutions locked till submit). Practice = short untimed-friendly set.">Exam kind <span class="q">?</span> <select id="wKind"><option value="full_mock">Mock</option><option value="simulation">Simulation (strict, review-after-submit)</option><option value="practice">Practice</option></select></label>
+      <label title="Saved blueprint = a fixed recipe from blueprints/. Custom spec = build your own below (counts, topics, difficulties).">Source <span class="q">?</span> <select id="wSrc" onchange="srcFlip()"><option value="blueprint">Saved blueprint</option><option value="custom">Custom spec</option></select></label>
+      <label title="Shown in the runner paper picker.">Title <span class="q">?</span> <input id="wTitle" size="24" value="IPMAT Custom Paper"></label>
+      <label title="Same seed + same bank = same paper. Change the seed for a different random selection.">Seed <span class="q">?</span> <input id="wSeed" size="6" value="42"></label>
     </div>
     <div id="wBpRow" class="row"><label>Blueprint <select id="wBp"></select></label></div>
     <div id="wCustom" style="display:none">
       <h3>Sections (topic mode: whole-section mix or single topic)</h3>
+      <p class="hint"><b>Section mix</b> = auto-split across that section's blueprint buckets (e.g. QA → Arithmetic/Algebra/ModernMath_Geometry/DI). <b>Single topic</b> = all questions from one bucket (e.g. 5 × Arithmetic drill). <b>Difficulties</b> restricts the pool — untick a level to exclude it (may cause "bank short" if the remaining pool is too small).</p>
       <div id="wSecs"></div>
       <div class="row"><button class="ghost btn" onclick="addSec()">+ section</button>
       <label>Difficulties <span id="wDiffs"><label><input type="checkbox" value="Easy" checked> Easy</label> <label><input type="checkbox" value="Medium" checked> Medium</label> <label><input type="checkbox" value="Hard" checked> Hard</label></span></label></div>
@@ -73,6 +93,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-llm">
   <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>
+    <p class="hint"><b>Generate</b> sends a section batch prompt (from <code>prompts/</code>) to your configured LLM, parses the returned questions and validates them against the schema. Tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Only schema-valid questions are ever saved. Requires <code>enabled:true</code> plus an OpenAI-compatible endpoint, model and API key in <code>app/llm.config.json</code> — keys never leave that local file.</p>
     <div id="llmStat"></div>
     <div class="row">
       <label>Section <select id="lSec"><option value="qa">QA</option><option value="lr">LR</option><option value="varc">VARC</option></select></label>
@@ -85,6 +106,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-cfg">
   <div class="card"><h2>Exam config <span class="muted">config/exam.config.json — marking locked to +3/−1/0</span></h2>
+    <p class="hint"><b>Defaults</b> used for custom papers and the runner: total time in seconds (8100 = 135 min) and per-section question counts. Marking is fixed to the IPMAT pattern and cannot be changed here — the server rejects anything else.</p>
     <div class="row"><label>Total time (sec) <input id="cTime" size="8"></label></div>
     <div id="cSecs"></div>
     <div class="row"><button class="btn" onclick="saveCfg()">Save config</button><span id="cfgMsg"></span></div></div>
@@ -96,7 +118,32 @@ document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
   b.classList.add("on");$("t-"+b.dataset.t).classList.add("on");});
-const BUCKETS={QA:["Arithmetic","Algebra","ModernMath_Geometry","DataInterpretation"],LR:["Arrangements","Series_Coding","CriticalReasoning"],VARC:["ReadingComprehension","VerbalLogic","Grammar","Vocabulary"]};
+let TAX={};
+async function loadTopics(){const{st,j}=await api("GET","/api/topics");if(st!==200)return;
+  TAX=j.taxonomy;
+  $("unmapped").innerHTML=(j.unmapped||[]).length?`<p class="err">Unmapped bank topics (add an alias or fix the question): ${j.unmapped.map(u=>`${u.section}/${u.topic} ×${u.count}`).join(", ")}</p>`:"";
+  let h="";
+  for(const sec of Object.keys(TAX)){h+=`<h3>${sec} — ${TAX[sec].label}</h3><table><tr><th>Bucket key</th><th>Label</th><th>Subtopics (comma-separated)</th><th>Aliases (comma-separated)</th><th>Qs</th><th></th></tr>`;
+    for(const b of Object.keys(TAX[sec].buckets)){const bi=TAX[sec].buckets[b];
+      h+=`<tr><td><b>${b}</b></td><td><input data-sec="${sec}" data-b="${b}" class="eLabel" size="20" value="${bi.label}"></td><td><input data-sec="${sec}" data-b="${b}" class="eSub" size="40" value="${(bi.subtopics||[]).join(", ")}"></td><td><input data-sec="${sec}" data-b="${b}" class="eAli" size="40" value="${(bi.aliases||[]).join(", ")}" title="Old topic names that resolve to this bucket"></td><td>${bi.questions}</td><td><button class="btn" onclick="saveBucket('${sec}','${b}')">Save</button> <button class="ghost btn" onclick="renameBucket('${sec}','${b}')">Rename</button> <button class="ghost btn" onclick="delBucket('${sec}','${b}')">Delete</button></td></tr>`;}
+    h+="</table>";}
+  $("topics").innerHTML=h;}
+const split=v=>v.split(",").map(x=>x.trim()).filter(Boolean);
+async function saveBucket(sec,b){const row=document.querySelector(`input.eLabel[data-sec="${sec}"][data-b="${b}"]`).closest("tr");
+  const body={action:"update",section:sec,bucket:b,label:row.querySelector(".eLabel").value,subtopics:split(row.querySelector(".eSub").value),aliases:split(row.querySelector(".eAli").value)};
+  const{st,j}=await api("POST","/api/topics",body);
+  if(st!==200)alert(j.errors.join("; "));await loadTopics();}
+async function addBucket(){const body={action:"add",section:$("tSec").value,bucket:$("tKey").value.trim(),label:$("tLabel").value.trim()};
+  const{st,j}=await api("POST","/api/topics",body);
+  $("tMsg").innerHTML=st===200?'<span class="ok">added</span>':`<span class="err">${j.errors.join("; ")}</span>`;
+  if(st===200){$("tKey").value="";$("tLabel").value="";await loadTopics();}}
+async function renameBucket(sec,b){const nb=prompt(`Rename bucket ${sec}/${b} to: (bank questions + blueprint mixes migrate automatically)`,b);
+  if(!nb||nb===b)return;const{st,j}=await api("POST","/api/topics",{action:"rename",section:sec,bucket:b,new_bucket:nb.trim()});
+  if(st!==200){alert(j.errors.join("; "));return;}
+  alert(`Renamed. ${j.questions_moved} question(s) moved, ${j.blueprints_touched} blueprint(s) updated.`);await loadTopics();await dash();}
+async function delBucket(sec,b){if(!confirm(`Delete bucket ${sec}/${b}? Blocked if questions or blueprints use it.`))return;
+  const{st,j}=await api("POST","/api/topics",{action:"delete",section:sec,bucket:b});
+  if(st!==200){alert(j.errors.join("; "));return;}await loadTopics();}
 async function api(m,u,b){const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));return{st:r.status,j};}
 async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)return;
   $("bankTotal").textContent="· "+j.bank_questions+" questions";
@@ -127,7 +174,8 @@ function addSec(code="QA",count=10){const d=document.createElement("div");d.clas
   <select class="sTopic"></select>`;
   d.querySelector(".sCode").value=code;$("wSecs").appendChild(d);secFlip(d.querySelector(".sCode"));}
 function secFlip(sel){const row=sel.closest(".row"),sec=sel.value,mode=row.querySelector(".sMode").value;
-  row.querySelector(".sTopic").innerHTML=BUCKETS[sec].map(b=>`<option>${b}</option>`).join("");
+  const keys=Object.keys((TAX[sec]||{buckets:{}}).buckets);
+  row.querySelector(".sTopic").innerHTML=keys.map(b=>`<option>${b}</option>`).join("");
   row.querySelector(".sTopic").style.display=mode==="single"?"":"none";}
 document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("sMode"))secFlip(e.target.closest(".row").querySelector(".sCode"));});
 let lastPaper=null;
@@ -164,7 +212,7 @@ async function saveCfg(){const body={time_sec:parseInt($("cTime").value||"8100")
   sections:[...document.querySelectorAll("#cSecs input")].map(i=>({code:i.dataset.sec,count:parseInt(i.value||"0")}))};
   const{st,j}=await api("POST","/api/config",body);
   $("cfgMsg").innerHTML=st===200?'<span class="ok">saved</span>':`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;}
-dash();loadBank();loadCfg();
+dash();loadBank();loadCfg();loadTopics();
 </script>
 </body>
 </html>

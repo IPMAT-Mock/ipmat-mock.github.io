@@ -1,6 +1,6 @@
 # AGENT.md — IPMAT Mock System
 
-Version: 3.0.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
+Version: 3.1.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
 
 ## 1. What this project is
 Hybrid mock-generation system for IPMAT (IIMB pattern) with a local admin app:
@@ -36,6 +36,7 @@ prompts/ ──generate──▶ bank/*.jsonl ──assemble──▶ papers/*.j
 | Assembler | `scripts/assemble_paper.py` → `scripts/banklib.py` | blueprint mix + difficulty_split → paper; balances answers 25% each; raises `BankShortage` with need/have details |
 | Validator | `scripts/validate_paper.py` → `banklib.validate_all` | schema + +3/−1/0 + unique qids + blueprint counts/mix/difficulty + balance |
 | Topic map | `banklib.TOPIC_BUCKET` | legacy QA topics → mix buckets (Arithmetic/Algebra/ModernMath_Geometry/DataInterpretation); LR/VARC seeds already use bucket names |
+| Taxonomy | `config/topics.json` | single source of truth: section → bucket {label, subtopics, aliases}; managed via admin Topics tab / `/api/topics` (add/update/rename-with-migration/delete-if-unused); bank adds reject unknown topics |
 | Migrator | `scripts/migrate_legacy.py` | legacy (+4/−1, `stem/answer`, Prompt1) → v2 |
 | Runner | `public/index.html` | Study/Exam/Simulation modes; paper picker from `public/papers/index.json`; `?paper=<id\|file>`; Simulation = strict, review-after-submit |
 | Manifest | `public/papers/index.json` | published set (id/title/file/kind/questions/time_sec) |
@@ -50,6 +51,7 @@ vs blueprint → paper → runner. Reproduce any paper via blueprint + seed.
 - Admin (preferred): `.\.venv\Scripts\python.exe app\server.py` → http://127.0.0.1:5057 — assemble via blueprint or wizard spec (kind/count/subject/single-topic-or-mix/difficulty), preview, publish to runner.
 - CLI: `assemble_paper.py --blueprint blueprints/full-mock-60q.yaml --bank bank --out papers/mock-NN.json --seed <n>` then validate with `--blueprint`. Publish = copy validated paper to `public/papers/` + upsert `public/papers/index.json`.
 - New questions: `prompts/` templates (or admin LLM tab when enabled); append JSONL to `bank/`; use bucket names as `topic` for new seeds (`Arithmetic`, `DataInterpretation`, …); validate.
+- Topics: edit in admin Topics tab (subtopics/aliases) — renames migrate bank + blueprints; JSONL appends always newline-separated.
 - Legacy import: `migrate_legacy.py <old.json> --out bank/<sec>.jsonl --section <QA|LR|VARC>`.
 - Env: `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`.
 

@@ -3,7 +3,7 @@
 Canonical spec: 60 MCQs (30 QA + 15 LR + 15 VARC), 135 min (8100 s),
 marking +3 correct / −1 wrong / 0 skipped. See `exam scheme/`.
 
-Bank: 77 questions (47 QA incl. Arithmetic + DI backfill, 15 LR, 15 VARC).
+Bank: 77 questions (47 QA incl. Arithmetic + DI backfill, 15 LR, 15 VARC), each tagged with a canonical subtopic from `config/topics.json` (enforced when adding).
 
 ## Layout
 - `schemas/` — v2 question + paper JSON schemas
@@ -26,7 +26,7 @@ py -m venv .venv
 ## Workflow (admin app, preferred)
 1. `.\.venv\Scripts\python.exe app\server.py` → open http://127.0.0.1:5057
 2. New paper tab: pick exam kind (mock/simulation/practice), a blueprint or a custom spec (count, subject, single-topic-or-mix, difficulty) → Assemble → preview → Publish. Each paper needs a unique Paper ID (auto-suggested; it becomes the `papers/<id>.json` filename) — reusing an ID is blocked unless you confirm the overwrite.
-3. Take it in `public/index.html` (paper picker or `?paper=<id>`). Serve `public/` for full manifest support.
+3. Take it in `public/index.html` (paper picker or `?paper=<id>`). Serve `public/` for full manifest support. The admin Papers tab shows each paper's composition (difficulty/section/topic/subtopic splits, answer balance, blueprint match) and handles unpublish/delete.
 4. Add questions via the Questions tab (schema-validated) or the LLM tab (needs `app/llm.config.json` enabled with an OpenAI-compatible endpoint). The bank's <b>Used in</b> column shows which published paper each question appears in (with a used/never-used filter).
 5. Students sign up at `public/signup.html` (name, unique email-id, mobile, password, T&C), sign in at `public/signin.html`, and are managed in the admin Students tab (search, password reset, delete). Auth pages need the Flask backend running — start from the landing page at `http://127.0.0.1:5057/public/landing.html`.
 

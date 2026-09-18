@@ -14,3 +14,15 @@ Rules:
 - Shuffle answer_index uniformly; do not bias toward one position.
 - Never use +4/-1, never use legacy fields (question_text, options[{is_correct}], answer, explanation).
 - Match official sample style: VARC RC + odd-one-out + para-jumble; LR arrangements / coded relations / ranking / series / cause-effect; QA arithmetic/algebra/modern-math/geometry/DI incl. Bayes, mixture, HCF/LCM, CI.
+- `topic` must be a taxonomy bucket; `subtopic` must be one of that bucket's canonical subtopics (exact spelling — the admin rejects anything else):
+  QA/Arithmetic: Percentages, Profit & Loss, Interest, Ratio & Proportion, Averages, Time-Speed-Distance, Time & Work;
+  QA/Algebra: Linear Equations, Quadratic Equations, Progressions, Functions & Graphs, Inequalities, Logarithms;
+  QA/ModernMath_Geometry: Permutation & Combination, Probability, Number Systems, Geometry, Mensuration;
+  QA/DataInterpretation: Tables, Bar Graphs, Pie Charts, Line Graphs;
+  LR/Arrangements: Seating Arrangements, Puzzle Grids, Days & Rankings, Grouping & Ordering, Blood Relations;
+  LR/Series_Coding: Number/Letter Series, Coding-Decoding, Analogies, Clocks, Calendars;
+  LR/CriticalReasoning: Syllogisms, Blood Relations, Cause-Effect, Inference, Assumptions, Strengthen & Weaken;
+  VARC/ReadingComprehension: Passages, Inference, Vocabulary-in-context, Main Idea, Tone & Attitude, Details, Title;
+  VARC/VerbalLogic: Para-jumbles, Paragraph Summary, Odd-one-out, Inference;
+  VARC/Grammar: Error Spotting, Sentence Correction, Agreement, Tenses, Prepositions, Fill-in-the-blanks;
+  VARC/Vocabulary: Synonyms, Antonyms, Idioms, Phrases, Fill-in-the-blanks.

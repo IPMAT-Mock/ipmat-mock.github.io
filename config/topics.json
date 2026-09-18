@@ -7,7 +7,9 @@
         "subtopics": [
           "Seating Arrangements",
           "Puzzle Grids",
-          "Days & Rankings"
+          "Days & Rankings",
+          "Grouping & Ordering",
+          "Blood Relations"
         ]
       },
       "CriticalReasoning": {
@@ -17,7 +19,9 @@
           "Syllogisms",
           "Blood Relations",
           "Cause-Effect",
-          "Inference"
+          "Inference",
+          "Assumptions",
+          "Strengthen & Weaken"
         ]
       },
       "Series_Coding": {
@@ -107,7 +111,8 @@
           "Sentence Correction",
           "Agreement",
           "Tenses",
-          "Prepositions"
+          "Prepositions",
+          "Fill-in-the-blanks"
         ]
       },
       "ReadingComprehension": {
@@ -116,7 +121,11 @@
         "subtopics": [
           "Passages",
           "Inference",
-          "Vocabulary-in-context"
+          "Vocabulary-in-context",
+          "Main Idea",
+          "Tone & Attitude",
+          "Details",
+          "Title"
         ]
       },
       "VerbalLogic": {
@@ -125,7 +134,8 @@
         "subtopics": [
           "Para-jumbles",
           "Paragraph Summary",
-          "Odd-one-out"
+          "Odd-one-out",
+          "Inference"
         ]
       },
       "Vocabulary": {

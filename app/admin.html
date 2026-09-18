@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="bp">Blueprints</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><button data-t="students">Students</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="bp">Blueprints</button><button data-t="wizard">New paper</button><button data-t="papers">Papers</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><button data-t="students">Students</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -45,17 +45,18 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-bank">
   <div class="card"><h2>Browse bank</h2>
-    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter. <b>Used in</b> lists every published paper containing the question (click to open it in the runner; — means never used) — combine with the <b>Usage</b> filter to find unused questions.</p>
+    <p class="hint"><b>Browse</b> — filter the question bank. <b>Topic</b> matches blueprint buckets (<span title="QA buckets">Arithmetic, Algebra, ModernMath_Geometry, DataInterpretation</span>, <span title="LR buckets">Arrangements, Series_Coding, CriticalReasoning</span>, <span title="VARC buckets">ReadingComprehension, VerbalLogic, Grammar, Vocabulary</span>). <b>Ans</b> shows the correct option letter. <b>Used in</b> lists every published paper containing the question (click to open it in the runner; — means never used) — combine with the <b>Usage</b> filter to find unused questions. <b>Subtopic</b> shows the canonical syllabus tag (every question carries one); filter by it with the <b>Subtopic</b> box.</p>
     <div class="row">
       <label title="Restrict to one section, or leave as all.">Section <select id="fSec"><option value="">all</option><option>QA</option><option>LR</option><option>VARC</option></select></label>
       <label title="Blueprint bucket, e.g. Arithmetic, Arrangements, ReadingComprehension.">Topic <input id="fTopic" placeholder="e.g. Arithmetic" size="18"></label>
+      <label title="Canonical subtopic tag, e.g. Percentages, Syllogisms, Main Idea (substring match).">Subtopic <input id="fSub" placeholder="e.g. Percentages" size="18"></label>
       <label title="Restrict to one difficulty level, or leave as all.">Difficulty <select id="fDiff"><option value="">all</option><option>Easy</option><option>Medium</option><option>Hard</option></select></label>
       <label title="Free text matched against the question stem and qid.">Search <input id="fQ" placeholder="stem or qid" size="20"></label>
       <label title="Show only questions used/unused in published papers.">Usage <select id="fUse"><option value="">all</option><option value="used">used in a paper</option><option value="unused">never used</option></select></label>
       <button class="btn" onclick="loadBank()">Filter</button>
     </div><div id="bankOut"></div></div>
   <div class="card"><h2>Add question</h2>
-    <p class="hint"><b>Add</b> — appends <b>one</b> question to the bank after schema validation. Required: unique <code>qid</code> (e.g. <code>QA-ARITH-014</code>), <code>section</code> (QA/LR/VARC), <code>topic</code> (use a bucket name so mixes can find it), <code>difficulty</code> (Easy/Medium/Hard), <code>stem</code>, 4 <code>options</code>, <code>answer_index</code> (0–3), <code>solution</code> (the full explanation — <b>required</b> by the schema). <code>hint</code> is optional but recommended: a short nudge shown alongside the question detail. New questions become usable in papers immediately.</p>
+    <p class="hint"><b>Add</b> — appends <b>one</b> question to the bank after schema validation. Required: unique <code>qid</code> (e.g. <code>QA-ARITH-014</code>), <code>section</code> (QA/LR/VARC), <code>topic</code> (use a bucket name so mixes can find it), <code>difficulty</code> (Easy/Medium/Hard), <code>stem</code>, 4 <code>options</code>, <code>answer_index</code> (0–3), <code>solution</code> (the full explanation — <b>required</b> by the schema). <code>hint</code> is optional but recommended: a short nudge shown alongside the question detail. <code>subtopic</code> must be one of the topic bucket's canonical subtopics (see the Topics tab) — anything else is rejected. New questions become usable in papers immediately.</p>
     <p class="muted">Paste one v2 question JSON. <button class="ghost btn" onclick="fillTemplate()">Insert template</button></p>
     <textarea id="newQ" rows="12" placeholder='{"qid": "...", ...}'></textarea>
     <div class="row"><button class="btn" onclick="addQ()">Validate &amp; append to bank</button><span id="addMsg"></span></div></div>
@@ -99,11 +100,13 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <tr><td><code>marks</code> / <code>time_sec</code></td><td>Locked to <code>+3 / −1 / 0</code>; time 30–600 s.</td></tr>
     <tr><td><code>solution</code> / <code>hint</code></td><td>Solution (full explanation) is <b>required</b>; hint (short nudge) is recommended. Both show in the bank detail view.</td></tr></table>
     <h3 id="g-browse">Questions tab — browsing the bank</h3>
-    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance. The <b>Used in</b> column shows which published papers each question appears in (paper IDs link straight to the runner; <b>⚠</b> marks a paper file missing from the runner manifest); the <b>Usage</b> dropdown filters to <b>used</b> or <b>never used</b> questions — handy for spotting bank gaps before writing new questions.</p>
+    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance. The <b>Used in</b> column shows which published papers each question appears in (paper IDs link straight to the runner; <b>⚠</b> marks a paper file missing from the runner manifest); the <b>Usage</b> dropdown filters to <b>used</b> or <b>never used</b> questions — handy for spotting bank gaps before writing new questions. The <b>Subtopic</b> column shows each question's canonical syllabus tag with a substring <b>Subtopic</b> filter — every question carries exactly one, enforced against the Topics tab on add.</p>
     <h3 id="g-topics">Topics tab — managing the taxonomy</h3>
     <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. Edit <b>label / subtopics / aliases</b> inline and <b>Save</b> (aliases let old topic names keep resolving). <b>Rename</b> migrates bank questions + blueprint mixes automatically and reports counts. <b>Delete</b> is blocked with exact usage while questions or blueprints reference the bucket. An <b>unmapped topics</b> alert flags any bank question matching no bucket — fix by adding an alias or correcting the question. Changes apply to assembly immediately.</p>
     <h3 id="g-bp">Blueprints tab — managing recipes</h3>
     <p class="hint">Saved recipes in <code>blueprints/*.yaml</code>. <b>New</b> starts a blank form; <b>Edit</b> loads a file (filename locks once created — use Duplicate to copy under a new name). Per-section <b>mix</b> numbers must sum to the row count; the <b>difficulty split</b> must sum to the paper total (or all zero for no targeting). <b>Check against bank</b> dry-runs assembly without saving; <b>Use in New paper →</b> jumps to the wizard with that blueprint selected. Deleting a blueprint never touches bank questions or already-published papers.</p>
+    <h3 id="g-papers">Papers tab — paper manager</h3>
+    <p class="hint">Every published paper as a card: <b>Breakdown</b> shows difficulty bars, section/topic/subtopic splits, answer balance, schema + bank integrity, and expected-vs-actual rows when a blueprint shares the paper's ID. <b>Unpublish</b> drops the runner listing only (files stay — the paper shows as an orphan and can be re-published). <b>Delete</b> removes the listing and both files after a double confirm. Dashboard rows link here via <b>details →</b>.</p>
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
     <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
@@ -113,7 +116,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 </section>
 <section class="tab" id="t-topics">
   <div class="card"><h2>Topic taxonomy <span class="muted">config/topics.json — single source of truth</span></h2>
-    <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. <b>Label</b> is the display name. <b>Subtopics</b> document syllabus coverage. <b>Aliases</b> let old topic names (e.g. legacy <code>Quantitative Aptitude - …</code>) keep resolving to a bucket. <b>Rename</b> migrates bank questions + blueprint mixes automatically. <b>Delete</b> is blocked while questions or blueprints use the bucket. Changes apply to assembly immediately.</p>
+    <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. <b>Label</b> is the display name. <b>Subtopics</b> document syllabus coverage and double as the question-level tags: adding a question with any other subtopic is rejected with the valid list. <b>Aliases</b> let old topic names (e.g. legacy <code>Quantitative Aptitude - …</code>) keep resolving to a bucket. <b>Rename</b> migrates bank questions + blueprint mixes automatically. <b>Delete</b> is blocked while questions or blueprints use the bucket. Changes apply to assembly immediately.</p>
     <div id="unmapped"></div><div id="topics"></div>
     <h3>Add bucket</h3>
     <div class="row">
@@ -168,6 +171,11 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <div id="asmOut"></div>
     <details style="margin-top:10px"><summary class="muted">How is this paper made without AI? (quick recap — full version in the Guide tab)</summary>
     <p class="hint" style="margin-top:8px">Your spec picks questions from the <b>bank</b> (<code>bank/*.jsonl</code>) by <b>seeded shuffle</b>: exact per-topic counts, difficulty auto-repair, answers balanced ~25% each. <b>Same bank + same seed = same paper.</b> Preview saves nothing; <b>Publish</b> validates and ships to the runner. The LLM only ever <em>writes new questions</em> — it is never involved in building papers. See the <b>Guide</b> tab for the full pipeline, a worked drill example and failure recovery.</p></details></div>
+</section>
+<section class="tab" id="t-papers">
+  <div class="card"><h2>Papers <span class="muted">composition, blueprint match, publish state</span></h2>
+    <p class="hint"><b>Breakdown</b> expands a paper: difficulty/section/topic/subtopic splits, answer balance, schema + bank integrity, and expected-vs-actual rows when a blueprint shares the paper's ID. <b>Unpublish</b> removes the runner listing only (files stay — reversible). <b>Delete</b> removes the listing <b>and both files</b> (cannot be undone).</p>
+    <div id="papersMgr"></div></div>
 </section>
 <section class="tab" id="t-llm">
   <div class="card"><h2>LLM question loop <span class="muted">(opt-in via app/llm.config.json)</span></h2>
@@ -312,10 +320,10 @@ async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)ret
     h+=`<tr><td>${s}</td><td>${b}</td><td>${d.Easy||0}</td><td>${d.Medium||0}</td><td>${d.Hard||0}</td><td>${(d.Easy||0)+(d.Medium||0)+(d.Hard||0)}</td></tr>`;}
   $("stats").innerHTML=h+"</table>";
   const p=await api("GET","/api/papers");
-  $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><a href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
+  $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><button class="ghost btn" onclick="gotoPapers('${e.id}')">details →</button><a href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
   await loadBlueprints();
   llmStat();}
-async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
+async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),subtopic:$("fSub").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
   const[bu,bk]=await Promise.all([api("GET","/api/usage"),api("GET","/api/bank?"+q)]);
   const{st,j}=bk;window._usage=(bu.j&&bu.j.usage)||{};
   let list=j.questions||[];const uf=$("fUse").value;
@@ -325,11 +333,11 @@ async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,t
   const useLink=p=>p.orphan?`<span class="muted" title="file published but missing from the runner manifest">${esc(p.id)} ⚠</span>`:`<a href="/public/index.html?paper=${encodeURIComponent(p.id)}" target="_blank" title="${esc(p.title)}">${esc(p.id)}</a>`;
   const useCell=u=>u.length?u.map(useLink).join("<br>"):'<span class="muted">—</span>';
   window._bank=list;
-  $("bankOut").innerHTML=`<p class="muted">${list.length} match (of ${j.count}) — click + on a row for options, hint, solution and paper usage.</p><table><tr><th></th><th>qid</th><th>sec</th><th>topic</th><th>diff</th><th>stem</th><th>ans</th><th>used in</th></tr>`+
+   $("bankOut").innerHTML=`<p class="muted">${list.length} match (of ${j.count}) — click + on a row for options, hint, solution and paper usage.</p><table><tr><th></th><th>qid</th><th>sec</th><th>topic</th><th>subtopic</th><th>diff</th><th>stem</th><th>ans</th><th>used in</th></tr>`+
    list.map((x,i)=>{const opts=(x.options||[]).map((o,k)=>`<div>${"ABCD"[k]}. ${esc(o)}${k===x.answer_index?' <b class="ok">✓</b>':''}</div>`).join("");
     const use=(window._usage[x.qid]||[]);
-    const det=`${x.passage?`<div><b>Passage:</b> ${esc(x.passage)}</div>`:""}<div><b>Options:</b>${opts}</div><div><b>Hint:</b> ${x.hint?esc(x.hint):'<span class="muted">— none</span>'}</div><div><b>Solution:</b> ${x.solution?esc(x.solution):'<span class="err">— missing</span>'}</div><div><b>Used in:</b> ${use.length?use.map(p=>p.orphan?`<span class="muted">${esc(p.title)} (${esc(p.id)} ⚠ not in manifest)</span>`:`<a href="/public/index.html?paper=${encodeURIComponent(p.id)}" target="_blank">${esc(p.title)} (${esc(p.id)})</a>`).join(" · "):'<span class="muted">no published paper yet</span>'}</div>`;
-    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${x.section}</td><td>${esc(x.topic)}</td><td>${x.difficulty}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td><td>${useCell(use)}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="7">${det}</td></tr>`;}).join("")+"</table>";}
+    const det=`<div><b>Subtopic:</b> ${x.subtopic?esc(x.subtopic):'<span class="muted">— none</span>'} (${esc(x.topic)})</div>${x.passage?`<div><b>Passage:</b> ${esc(x.passage)}</div>`:""}<div><b>Options:</b>${opts}</div><div><b>Hint:</b> ${x.hint?esc(x.hint):'<span class="muted">— none</span>'}</div><div><b>Solution:</b> ${x.solution?esc(x.solution):'<span class="err">— missing</span>'}</div><div><b>Used in:</b> ${use.length?use.map(p=>p.orphan?`<span class="muted">${esc(p.title)} (${esc(p.id)} ⚠ not in manifest)</span>`:`<a href="/public/index.html?paper=${encodeURIComponent(p.id)}" target="_blank">${esc(p.title)} (${esc(p.id)})</a>`).join(" · "):'<span class="muted">no published paper yet</span>'}</div>`;
+    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${x.section}</td><td>${esc(x.topic)}</td><td>${x.subtopic?esc(x.subtopic):'<span class="muted">—</span>'}</td><td>${x.difficulty}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td><td>${useCell(use)}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="8">${det}</td></tr>`;}).join("")+"</table>";}
 function toggleQ(i){const r=$("qd"+i);r.style.display=r.style.display==="none"?"":"none";}
 function fillTemplate(){$("newQ").value=JSON.stringify({qid:"QA-ARITH-014",section:"QA",topic:"Arithmetic",subtopic:"Percentages",difficulty:"Easy",marks:{correct:3,wrong:-1,skipped:0},time_sec:90,stem:"",options:["","","",""],answer_index:0,hint:"",solution:""},null,1);}
 async function addQ(){let q;try{q=JSON.parse($("newQ").value);}catch(e){$("addMsg").innerHTML='<span class="err">bad JSON</span>';return;}
@@ -420,7 +428,42 @@ async function resetPw(id){const pw=prompt(`New password for ${id} (min 8 charac
   if(pw===null)return;
   const{st,j}=await api("POST",`/api/students/${id}/reset-password`,{password:pw});
   alert(st===200?`Password reset for ${id}.`:(j.errors||["reset failed"]).join("; "));}
-dash();loadBank();loadCfg();loadTopics();loadStudents();pidAuto();
+let PAPERS=[];
+async function loadPapers(){const{st,j}=await api("GET","/api/papers");if(st!==200)return;
+  PAPERS=j.papers||[];renderPapers();}
+function renderPapers(){const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  $("papersMgr").innerHTML=PAPERS.length?PAPERS.map((e,i)=>`<div class="card" style="margin-top:10px"><div class="row"><b>${esc(e.title)}</b><span class="muted">${esc(e.id)} · ${esc(e.kind)} · ${e.questions}Q · ${e.time_sec}s</span><span style="margin-left:auto"></span><button class="btn" onclick="togglePaper(${i})">Breakdown</button><a class="btn ghost" href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a><button class="ghost btn" onclick="unpublish('${esc(e.id)}')">Unpublish</button><button class="ghost btn" onclick="delPaper('${esc(e.id)}','${esc(e.title)}')">Delete</button></div><div id="pb${i}"></div></div>`).join(""):'<p class="muted">No published papers yet — assemble one in the New paper tab.</p>';}
+async function togglePaper(i){const box=$("pb"+i);if(box.dataset.open){box.innerHTML="";delete box.dataset.open;return;}
+  const e=PAPERS[i];box.innerHTML='<p class="muted">loading…</p>';
+  const{st,j}=await api("GET",`/api/papers/${encodeURIComponent(e.id)}/breakdown`);
+  if(st!==200){box.innerHTML=`<p class="err">${((j||{}).errors||["failed"]).join("; ")}</p>`;return;}
+  const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const d=j.difficulty,tot=j.total||1;
+  const bar=(label,n)=>`<div>${label} <b>${n}</b> (${Math.round(100*n/tot)}%)<div style="background:#e2e8f0;border-radius:4px;height:8px"><div style="background:#1d4ed8;height:8px;border-radius:4px;width:${Math.round(100*n/tot)}%"></div></div></div>`;
+  const bp=j.blueprint?`<h4>Blueprint match — ${esc(j.blueprint.file)} ${j.blueprint.match?'<span class="ok">✓ all match</span>':'<span class="err">✗ differs</span>'}</h4><table><tr><th>check</th><th>expected</th><th>actual</th><th></th></tr>${j.blueprint.rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.expected}</td><td>${r.actual}</td><td>${r.match?'<span class="ok">✓</span>':'<span class="err">✗</span>'}</td></tr>`).join("")}</table>`:'<p class="muted">No blueprint shares this paper ID — no expected-vs-actual comparison.</p>';
+  box.innerHTML=`<p class="muted">${esc(j.file)}${j.orphan?' · <span class="err">orphan — not in the runner manifest</span>':''} · seed ${j.seed??"—"} · marking +${j.marking.correct}/−${Math.abs(j.marking.wrong)}/${j.marking.skipped}</p>
+   <h4>Difficulty</h4>${bar("Easy",d.Easy)}${bar("Medium",d.Medium)}${bar("Hard",d.Hard)}
+   <h4>Sections</h4><p>QA <b>${j.sections.QA}</b> · LR <b>${j.sections.LR}</b> · VARC <b>${j.sections.VARC}</b></p>
+   <h4>Topics</h4><table><tr><th>section</th><th>topic</th><th>Qs</th></tr>${j.topics.map(t=>`<tr><td>${t.section}</td><td>${esc(t.topic)}</td><td>${t.count}</td></tr>`).join("")}</table>
+   <details><summary class="muted">Subtopic coverage (${j.subtopics.length})</summary><table><tr><th>section</th><th>topic</th><th>subtopic</th><th>Qs</th></tr>${j.subtopics.map(t=>`<tr><td>${t.section}</td><td>${esc(t.topic)}</td><td>${esc(t.subtopic)}</td><td>${t.count}</td></tr>`).join("")}</table></details>
+   <h4>Answers</h4><p>A <b>${j.answers.A}</b> · B <b>${j.answers.B}</b> · C <b>${j.answers.C}</b> · D <b>${j.answers.D}</b> ${j.answers_balanced?'<span class="ok">✓ balanced</span>':`<span class="err">✗ spread exceeds ±${j.answer_tolerance}</span>`}</p>
+   <h4>Integrity</h4><p>${j.schema_errors.length?`<span class="err">schema: ${esc(j.schema_errors.join("; "))}</span>`:'<span class="ok">✓ schema clean</span>'} · ${j.in_bank}/${j.total} questions still in the bank</p>
+   ${bp}`;
+  box.dataset.open="1";}
+async function unpublish(id){if(!confirm(`Unpublish '${id}'? Removes it from the runner listing; files stay and it can be re-published later.`))return;
+  const{st,j}=await api("POST",`/api/papers/${encodeURIComponent(id)}/unpublish`);
+  if(st!==200)alert((j.errors||["unpublish failed"]).join("; "));
+  await loadPapers();await dash();}
+async function delPaper(id,title){if(!confirm(`Delete paper '${title}' (${id})? Removes the runner listing AND both paper files.`))return;
+  if(!confirm(`Really delete ${id}? This cannot be undone.`))return;
+  const{st,j}=await api("DELETE",`/api/papers/${encodeURIComponent(id)}`);
+  if(st!==200){alert((j.errors||["delete failed"]).join("; "));return;}
+  alert(`Deleted ${id}: ${(j.removed||[]).join(", ")||"manifest entry only"}.`);
+  await loadPapers();await dash();}
+async function gotoPapers(id){document.querySelector('#tabs button[data-t="papers"]').click();
+  await loadPapers();const i=PAPERS.findIndex(e=>e.id===id);
+  if(i>=0&&!$("pb"+i).dataset.open)togglePaper(i);}
+dash();loadBank();loadCfg();loadTopics();loadStudents();loadPapers();pidAuto();
 </script>
 </body>
 </html>

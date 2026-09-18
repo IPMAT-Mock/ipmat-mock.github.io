@@ -87,11 +87,13 @@ def bank_list():
     sec = request.args.get("section", "")
     topic = request.args.get("topic", "")
     diff = request.args.get("difficulty", "")
+    sub = (request.args.get("subtopic", "") or "").lower()
     q = (request.args.get("q", "") or "").lower()
     out = [x for x in pool
            if (not sec or x.get("section") == sec)
            and (not topic or banklib.bucket_of(x) == topic or x.get("topic") == topic)
            and (not diff or x.get("difficulty") == diff)
+           and (not sub or sub in (x.get("subtopic") or "").lower())
            and (not q or q in (x.get("stem", "") + x.get("qid", "")).lower())]
     return jsonify({"count": len(out), "questions": out})
 
@@ -113,6 +115,13 @@ def bank_add():
         return jsonify({"ok": False, "errors": [
             f"unknown topic '{q.get('topic')}' for {q.get('section')}. " +
             f"Valid: {sorted(known) or 'none — define buckets in the Topics tab first'}"]}), 422
+    bucket = banklib.bucket_of(q, tax)
+    valid_subs = tax.get(q.get("section"), {}).get("buckets", {}).get(bucket, {}).get("subtopics", [])
+    st = (q.get("subtopic") or "").strip()
+    if st and st not in valid_subs:
+        return jsonify({"ok": False, "errors": [
+            f"unknown subtopic '{st}' for {q.get('section')}/{bucket}. " +
+            f"Valid: {valid_subs or 'none — add subtopics in the Topics tab first'}"]}), 422
     target = BANK_DIR / BANK_FILE.get(q.get("section"), "qa.jsonl")
     target.parent.mkdir(parents=True, exist_ok=True)
     _append_bank(target, q)
@@ -566,6 +575,156 @@ def publish():
     return jsonify({"ok": True, "entry": entry, "overwrote": bool(clash),
                     "files": [f"papers/{safe}.json",
                               f"public/papers/{safe}.json"]})
+
+
+def _resolve_paper(pid):
+    """Resolve a paper id via the runner manifest (fallback: filename stem).
+
+    Returns (entry_or_None, path_or_None, orphan_bool).
+    """
+    man = _manifest()
+    entry = next((e for e in man.get("papers", []) if e.get("id") == pid), None)
+    if entry and (PAPERS_DIR / entry.get("file", "")).exists():
+        return entry, PAPERS_DIR / entry["file"], False
+    cand = PAPERS_DIR / f"{pid}.json"
+    if cand.exists():
+        return entry, cand, True
+    for f in sorted(PAPERS_DIR.glob("*.json")):
+        try:
+            paper = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if paper.get("paper_id") == pid:
+            return entry, f, entry is None
+    return entry, None, True
+
+
+@app.get("/api/papers/<pid>/breakdown")
+def paper_breakdown(pid):
+    """Per-paper composition: difficulty/section/topic/subtopic splits,
+    answer balance, integrity, plus blueprint expected-vs-actual when a
+    blueprint with the same paper_id exists."""
+    from collections import Counter
+    entry, path, orphan = _resolve_paper(pid)
+    if path is None:
+        return jsonify({"ok": False, "errors": [f"unknown paper '{pid}'"]}), 404
+    try:
+        paper = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return jsonify({"ok": False, "errors": [f"cannot read {path.name}: {e}"]}), 422
+    qs = paper.get("questions", []) or []
+    n = len(qs)
+    diff = Counter(q.get("difficulty", "?") for q in qs)
+    sec = Counter(q.get("section", "?") for q in qs)
+    topics, subtopics = {}, {}
+    for q in qs:
+        tkey = f"{q.get('section')}|{banklib.bucket_of(q)}"
+        topics[tkey] = topics.get(tkey, 0) + 1
+        skey = f"{tkey}|{q.get('subtopic') or '—'}"
+        subtopics[skey] = subtopics.get(skey, 0) + 1
+    answers = Counter("ABCD"[q["answer_index"]] for q in qs
+                      if isinstance(q.get("answer_index"), int) and 0 <= q["answer_index"] <= 3)
+    tol = DEFAULT_CONFIG.get("answer_balance_tolerance", 2)
+    bank_qids = {x.get("qid") for x in _pool()}
+    in_bank = sum(1 for q in qs if q.get("qid") in bank_qids)
+    spec = paper.get("spec", {}) or {}
+    # blueprint expected-vs-actual (blueprints carry paper_id)
+    bp_cmp = None
+    import yaml
+    for bf in sorted((ROOT / "blueprints").glob("*.yaml")):
+        try:
+            bp = yaml.safe_load(bf.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if (bp.get("paper_id") or "") == (paper.get("paper_id") or pid):
+            rows = []
+            for s in bp.get("sections", []) or []:
+                code, want = s.get("code"), int(s.get("count", 0))
+                got = sec.get(code, 0)
+                rows.append({"label": f"{code} count", "expected": want,
+                             "actual": got, "match": want == got})
+                for b, bn in (s.get("mix") or {}).items():
+                    g = topics.get(f"{code}|{b}", 0)
+                    rows.append({"label": f"{code}/{b}", "expected": int(bn),
+                                 "actual": g, "match": int(bn) == g})
+            ds = bp.get("difficulty_split") or {}
+            for d in ("Easy", "Medium", "Hard"):
+                if d in ds:
+                    rows.append({"label": f"difficulty {d}", "expected": int(ds[d]),
+                                 "actual": diff.get(d, 0),
+                                 "match": int(ds[d]) == diff.get(d, 0)})
+            bp_cmp = {"file": bf.name, "rows": rows,
+                      "match": all(r["match"] for r in rows)}
+            break
+    return jsonify({
+        "ok": True, "id": pid, "orphan": orphan,
+        "title": paper.get("title") or (entry or {}).get("title", pid),
+        "kind": paper.get("kind") or (entry or {}).get("kind"),
+        "file": path.name, "total": n,
+        "time_sec": spec.get("time_sec", 8100),
+        "marking": spec.get("marking", DEFAULT_CONFIG["marking"]),
+        "seed": (paper.get("meta", {}) or {}).get("seed"),
+        "difficulty": {k: diff.get(k, 0) for k in ("Easy", "Medium", "Hard")},
+        "sections": {k: sec.get(k, 0) for k in ("QA", "LR", "VARC")},
+        "topics": [{"section": k.split("|")[0], "topic": k.split("|")[1], "count": v}
+                   for k, v in sorted(topics.items())],
+        "subtopics": [{"section": k.split("|")[0], "topic": k.split("|")[1],
+                       "subtopic": k.split("|")[2], "count": v}
+                      for k, v in sorted(subtopics.items())],
+        "answers": {k: answers.get(k, 0) for k in "ABCD"},
+        "answers_balanced": (max(answers.values()) - min(answers.values()) <= tol) if answers else True,
+        "answer_tolerance": tol,
+        "in_bank": in_bank,
+        "schema_errors": banklib.validate_all(paper, QSCHEMA),
+        "blueprint": bp_cmp,
+    })
+
+
+@app.post("/api/papers/<pid>/unpublish")
+def paper_unpublish(pid):
+    """Remove the manifest entry only — files stay, paper becomes an orphan."""
+    man = _manifest()
+    kept = [e for e in man.get("papers", []) if e.get("id") != pid]
+    if len(kept) == len(man.get("papers", [])):
+        entry, path, _ = _resolve_paper(pid)
+        if path is None:
+            return jsonify({"ok": False, "errors": [f"unknown paper '{pid}'"]}), 404
+        return jsonify({"ok": True, "id": pid, "already_orphan": True})
+    man["papers"] = kept
+    _write_json(PUBLIC_PAPERS / "index.json", man)
+    return jsonify({"ok": True, "id": pid})
+
+
+@app.delete("/api/papers/<pid>")
+def paper_delete(pid):
+    """Remove manifest entry + both paper files (papers/ and public/papers/)."""
+    entry, path, _ = _resolve_paper(pid)
+    if path is None and entry is None:
+        return jsonify({"ok": False, "errors": [f"unknown paper '{pid}'"]}), 404
+    removed = []
+    man = _manifest()
+    man["papers"] = [e for e in man.get("papers", []) if e.get("id") != pid]
+    _write_json(PUBLIC_PAPERS / "index.json", man)
+    for p in ([path] if path else []) + (
+            [PUBLIC_PAPERS / path.name] if path else []):
+        try:
+            if p and p.exists():
+                p.unlink()
+                removed.append(p.relative_to(ROOT).as_posix())
+        except Exception:
+            pass
+    if entry and entry.get("file"):
+        for base in (PAPERS_DIR, PUBLIC_PAPERS):
+            p = base / entry["file"]
+            rel = p.relative_to(ROOT).as_posix()
+            if p.exists():
+                try:
+                    p.unlink()
+                    if rel not in removed:
+                        removed.append(rel)
+                except Exception:
+                    pass
+    return jsonify({"ok": True, "id": pid, "removed": removed})
 
 
 # ---------------- config ----------------

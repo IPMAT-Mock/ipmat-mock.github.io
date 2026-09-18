@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="guide">Guide</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" onclick="goAuthoring()" title="How to add new questions manually, without the LLM">📖 Adding questions</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" onclick="goGuide()" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -60,7 +60,11 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <div class="row"><button class="btn" onclick="addQ()">Validate &amp; append to bank</button><span id="addMsg"></span></div></div>
 </section>
 <section class="tab" id="t-guide">
-  <div class="card"><h2>How papers are made — no AI needed</h2>
+  <div class="card"><h2>Admin app user guide — every area, end to end</h2>
+    <p class="hint">This one guide covers the <b>whole admin app</b>: Dashboard · Questions · Topics · New paper · LLM loop · Config. Open it anytime via the <b>📖 Guide</b> button at the right corner of the menu above. Nothing here needs AI unless explicitly stated.</p>
+    <h3 id="g-dash">Dashboard — read-only overview</h3>
+    <p class="hint"><b>Bank coverage</b> shows question counts per topic bucket × difficulty — check it <em>before</em> assembling to judge whether your spec is feasible. <b>Published papers</b> lists everything shipped to the runner, each with an <b>Open ↗</b> link that loads it directly via <code>?paper=&lt;id&gt;</code>.</p>
+    <h3 id="g-pipeline">How papers are made — no AI needed</h3>
     <p class="hint">Paper generation is <b>deterministic curation</b> from your validated question bank. The LLM tab is purely an <em>optional authoring aid</em> for writing new questions — assembly itself never calls any AI.</p>
     <h3>The 5-step pipeline</h3>
     <table><tr><th>#</th><th>Step</th><th>What happens</th><th>Where</th></tr>
@@ -90,7 +94,15 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <tr><td><code>topic</code></td><td>Must be a taxonomy bucket or alias (see Topics tab), otherwise assembly mixes can't find it.</td></tr>
     <tr><td><code>stem</code> / <code>options</code> / <code>answer_index</code></td><td>Stem ≥ 10 chars; exactly 4 non-empty options; <code>answer_index</code> 0–3.</td></tr>
     <tr><td><code>marks</code> / <code>time_sec</code></td><td>Locked to <code>+3 / −1 / 0</code>; time 30–600 s.</td></tr>
-    <tr><td><code>solution</code> / <code>hint</code></td><td>Solution (full explanation) is <b>required</b>; hint (short nudge) is recommended. Both show in the bank detail view.</td></tr></table></div>
+    <tr><td><code>solution</code> / <code>hint</code></td><td>Solution (full explanation) is <b>required</b>; hint (short nudge) is recommended. Both show in the bank detail view.</td></tr></table>
+    <h3 id="g-browse">Questions tab — browsing the bank</h3>
+    <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance.</p>
+    <h3 id="g-topics">Topics tab — managing the taxonomy</h3>
+    <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. Edit <b>label / subtopics / aliases</b> inline and <b>Save</b> (aliases let old topic names keep resolving). <b>Rename</b> migrates bank questions + blueprint mixes automatically and reports counts. <b>Delete</b> is blocked with exact usage while questions or blueprints reference the bucket. An <b>unmapped topics</b> alert flags any bank question matching no bucket — fix by adding an alias or correcting the question. Changes apply to assembly immediately.</p>
+    <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
+    <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code> plus an OpenAI-compatible endpoint, model and key (keys never leave that local file). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
+    <h3 id="g-cfg">Config tab — exam defaults</h3>
+    <p class="hint">Edits <code>config/exam.config.json</code>: <b>total time</b> in seconds (8100 = 135 min) and <b>per-section counts</b> used for custom papers. Marking is locked to <b>+3 / −1 / 0</b> — the server rejects anything else.</p></div>
 </section>
 <section class="tab" id="t-topics">
   <div class="card"><h2>Topic taxonomy <span class="muted">config/topics.json — single source of truth</span></h2>
@@ -156,11 +168,10 @@ document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
   b.classList.add("on");$("t-"+b.dataset.t).classList.add("on");});
-function goAuthoring(){document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
+function goGuide(){document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("on"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
-  document.querySelector('#tabs button[data-t="guide"]').classList.add("on");
   $("t-guide").classList.add("on");
-  $("authoring").scrollIntoView();}
+  window.scrollTo(0,0);}
 let TAX={};
 async function loadTopics(){const{st,j}=await api("GET","/api/topics");if(st!==200)return;
   TAX=j.taxonomy;

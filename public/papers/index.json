@@ -15,6 +15,14 @@
       "questions": 15,
       "time_sec": 1800,
       "title": "IPMAT Practice Set (15Q)"
+    },
+    {
+      "id": "IPMAT-CUSTOM",
+      "title": "IPMAT QA by Amit 10Qns",
+      "file": "IPMAT-CUSTOM.json",
+      "kind": "practice",
+      "questions": 10,
+      "time_sec": 1800
     }
   ]
 }

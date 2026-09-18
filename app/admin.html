@@ -35,7 +35,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
 <header><h1>IPMAT Admin</h1><span class="muted" style="color:#cbb">local · Flask :5057</span>
 <a href="/public/index.html" target="_blank" id="runnerLink">Open runner ↗</a></header>
 <nav id="tabs">
-<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
+<button data-t="dash" class="on">Dashboard</button><button data-t="bank">Questions</button><button data-t="topics">Topics</button><button data-t="bp">Blueprints</button><button data-t="wizard">New paper</button><button data-t="llm">LLM loop</button><button data-t="cfg">Config</button><span style="margin-left:auto"></span><button class="ghost btn" data-t="guide" title="All-inclusive user guide for every area of this admin app">📖 Guide</button>
 </nav>
 <main>
 <section class="tab on" id="t-dash">
@@ -79,13 +79,15 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <table><tr><th>Field</th><th>Meaning</th></tr>
     <tr><td>Exam kind</td><td><b>Mock</b> = standard timed paper · <b>Simulation</b> = exam-day strict (no hints/pauses, solutions locked till submit) · <b>Practice</b> = short set, e.g. drills.</td></tr>
     <tr><td>Seed</td><td>Random draw control: <b>same bank + same seed = same paper</b>. Change it for a fresh selection.</td></tr>
+    <tr><td>Paper ID</td><td><b>Unique id per paper — it becomes the filename</b> <code>papers/&lt;Paper ID&gt;.json</code>. Auto-suggested from the title + timestamp; publishing a duplicate Paper ID is blocked unless you confirm the overwrite.</td></tr>
     <tr><td>Section mix vs single topic</td><td><b>Mix</b> auto-splits across the section's taxonomy buckets · <b>Single topic</b> takes all questions from one bucket (drills).</td></tr>
     <tr><td>Difficulties</td><td>Restricts the pool before picking. Unticking a level can cause "bank short" if too little remains.</td></tr></table>
     <h3>When it fails — recovery</h3>
     <table><tr><th>Message</th><th>Fix</th></tr>
     <tr><td><code>bank short for QA/Arithmetic: need 20, have 13</code></td><td>Add questions (Questions tab or LLM tab), lower the count, or switch to section mix.</td></tr>
     <tr><td><code>difficulty Easy: want 20, got 19 (warning)</code></td><td>Bank spread is thin for that bucket — preview still usable; add Easy questions of that topic to silence it.</td></tr>
-    <tr><td>Validation error on publish</td><td>Read the listed line: schema breach (fix the question), marking drift, duplicate qid, or count mismatch.</td></tr></table>
+    <tr><td>Validation error on publish</td><td>Read the listed line: schema breach (fix the question), marking drift, duplicate qid, or count mismatch.</td></tr>
+    <tr><td><code>paper_id '…' already published</code></td><td>That Paper ID exists. Change the Paper ID for a new paper, or confirm the overwrite to replace it. The publish message always shows the exact saved files (<code>papers/…</code> + <code>public/papers/…</code>) so you can verify.</td></tr></table>
     <h3 id="authoring">Adding new questions without AI</h3>
     <p class="hint">New questions are authored <b>manually</b> — no LLM involved. Flow: Questions tab → <b>Insert template</b> → fill in the fields → <b>Validate &amp; append to bank</b>. The server schema-checks, rejects duplicate qids and unknown topics, then appends to <code>bank/&lt;section&gt;.jsonl</code>. Saved questions are usable in assembly immediately (Dashboard coverage updates).</p>
     <table><tr><th>Field</th><th>Rule</th></tr>
@@ -99,6 +101,8 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
     <p class="hint">Filter by <b>Section</b>, <b>Topic</b> (taxonomy bucket), <b>Difficulty</b> or free-text <b>Search</b> (stem or qid), then <b>Filter</b>. Click <b>+</b> on any row to expand it: all 4 options with the correct one ticked ✓, plus passage (RC items), hint and solution. <b>Ans</b> column shows the correct option letter at a glance.</p>
     <h3 id="g-topics">Topics tab — managing the taxonomy</h3>
     <p class="hint"><b>Buckets</b> are the mix keys blueprints assemble from. Edit <b>label / subtopics / aliases</b> inline and <b>Save</b> (aliases let old topic names keep resolving). <b>Rename</b> migrates bank questions + blueprint mixes automatically and reports counts. <b>Delete</b> is blocked with exact usage while questions or blueprints reference the bucket. An <b>unmapped topics</b> alert flags any bank question matching no bucket — fix by adding an alias or correcting the question. Changes apply to assembly immediately.</p>
+    <h3 id="g-bp">Blueprints tab — managing recipes</h3>
+    <p class="hint">Saved recipes in <code>blueprints/*.yaml</code>. <b>New</b> starts a blank form; <b>Edit</b> loads a file (filename locks once created — use Duplicate to copy under a new name). Per-section <b>mix</b> numbers must sum to the row count; the <b>difficulty split</b> must sum to the paper total (or all zero for no targeting). <b>Check against bank</b> dry-runs assembly without saving; <b>Use in New paper →</b> jumps to the wizard with that blueprint selected. Deleting a blueprint never touches bank questions or already-published papers.</p>
     <h3 id="g-llm">LLM loop tab — optional AI authoring</h3>
     <p class="hint">Disabled until <code>app/llm.config.json</code> has <code>enabled:true</code>. Pick a <b>Provider</b> per call: <b>OpenAI-compatible</b> (endpoint + model + key) or <b>Gemini</b> (model + key only). <b>Preview exact prompt</b> shows the byte-identical system + user prompts before any call. <b>Generate</b> parses and schema-validates the reply; tick <b>save valid to bank</b> to append passing questions (duplicates skipped). Nothing invalid is ever saved.</p>
     <h3 id="g-cfg">Config tab — exam defaults</h3>
@@ -116,13 +120,37 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <button class="btn" onclick="addBucket()">Add</button><span id="tMsg"></span>
     </div></div>
 </section>
+<section class="tab" id="t-bp">
+  <div class="card"><h2>Blueprints <span class="muted">blueprints/*.yaml — paper recipes</span></h2>
+    <p class="hint"><b>Blueprints</b> are the saved recipes assembly uses: section counts + per-bucket topic mix + difficulty split. <b>Edit</b> loads one into the form below, <b>Duplicate</b> copies it, <b>Delete</b> removes the file (never touches the bank). <b>Use →</b> jumps to the New paper tab with that blueprint pre-selected. Mix counts for a section must sum to its count; the difficulty split must sum to the paper total.</p>
+    <div class="row"><button class="btn" onclick="newBlueprint()">+ New blueprint</button><button class="ghost btn" onclick="loadBlueprints()">Refresh list</button><span id="bpMsg"></span></div>
+    <div id="bpList"></div></div>
+  <div class="card" id="bpEditorCard" style="display:none"><h2 id="bpEdTitle">Edit blueprint</h2>
+    <div class="row">
+      <label title="YAML filename: lowercase letters/digits/-/_, e.g. sectional-qa-30.yaml">File <span class="q">?</span> <input id="bFile" size="26" placeholder="e.g. practice-10q-qa.yaml"></label>
+      <label>Paper ID <input id="bPid" size="20" placeholder="IPMAT-PRACTICE-10"></label>
+      <label>Title <input id="bTitle" size="28" placeholder="My practice set"></label>
+    </div>
+    <div class="row">
+      <label title="Mock = standard timed paper. Simulation = strict mode. Practice = short set. Sectional = single-section paper.">Kind <span class="q">?</span> <select id="bKind"><option value="full_mock">full_mock (Mock)</option><option value="simulation">simulation</option><option value="practice">practice</option><option value="sectional">sectional</option></select></label>
+      <label title="Total time in seconds. 8100 = 135 min (IPMAT standard).">Time (sec) <span class="q">?</span> <input id="bTime" size="7" value="8100"></label>
+      <label title="Must sum to the paper total. Leave all zero for no difficulty targeting.">Difficulty split <span class="q">?</span> Easy <input id="bEasy" size="4" value="0"> Medium <input id="bMed" size="4" value="0"> Hard <input id="bHard" size="4" value="0"></label>
+    </div>
+    <h3>Sections</h3>
+    <p class="hint">One row per section. <b>Mix</b> = exact questions per topic bucket (must sum to the row count). <b>No mix</b> = plain section count, any topics. Tick <b>use mix</b> to set per-bucket numbers.</p>
+    <div id="bSecs"></div>
+    <div class="row"><button class="ghost btn" onclick="bpAddSec()">+ section</button></div>
+    <div class="row"><button class="btn" onclick="bpSave()">Validate &amp; save blueprint</button><button class="ghost btn" onclick="bpDryRun()" title="Assemble with this spec (seed 42) without saving — shows bank-short errors or warnings.">Check against bank</button><button class="ghost btn" onclick="bpUse()">Use in New paper →</button><span id="bSaveMsg"></span></div>
+    <div id="bCheck"></div></div>
+</section>
 <section class="tab" id="t-wizard">
   <div class="card"><h2>New paper</h2>
-    <p class="hint"><b>How it works:</b> ① choose an exam kind and a source → ② <b>Assemble</b> previews the paper (topic mix, difficulty split, warnings — nothing is saved yet) → ③ <b>Publish</b> validates and adds it to the runner. If the bank can't satisfy a spec you'll get a "bank short" message telling you exactly which topic needs more questions.</p>
+    <p class="hint"><b>How it works:</b> ① choose an exam kind and a source → ② <b>Assemble</b> previews the paper (topic mix, difficulty split, warnings — nothing is saved yet) → ③ <b>Publish</b> validates and adds it to the runner. If the bank can't satisfy a spec you'll get a "bank short" message telling you exactly which topic needs more questions. Publishing an already-used <b>Paper ID</b> is blocked — change the ID or confirm the overwrite.</p>
     <div class="row">
       <label title="Mock = standard timed paper. Simulation = exam-day strict mode (no hints/pauses, solutions locked till submit). Practice = short untimed-friendly set.">Exam kind <span class="q">?</span> <select id="wKind"><option value="full_mock">Mock</option><option value="simulation">Simulation (strict, review-after-submit)</option><option value="practice">Practice</option></select></label>
       <label title="Saved blueprint = a fixed recipe from blueprints/. Custom spec = build your own below (counts, topics, difficulties).">Source <span class="q">?</span> <select id="wSrc" onchange="srcFlip()"><option value="blueprint">Saved blueprint</option><option value="custom">Custom spec</option></select></label>
-      <label title="Shown in the runner paper picker.">Title <span class="q">?</span> <input id="wTitle" size="24" value="IPMAT Custom Paper"></label>
+      <label title="Shown in the runner paper picker.">Title <span class="q">?</span> <input id="wTitle" size="24" value="IPMAT Custom Paper" oninput="pidAuto()"></label>
+      <label title="Unique id for this paper — becomes the filename papers/<Paper ID>.json. Auto-suggested from the title; publishing a duplicate Paper ID is blocked unless you confirm the overwrite.">Paper ID <span class="q">?</span> <input id="wPid" size="22" value="" oninput="pidTouched=true"></label>
       <label title="Same seed + same bank = same paper. Change the seed for a different random selection.">Seed <span class="q">?</span> <input id="wSeed" size="6" value="42"></label>
     </div>
     <div id="wBpRow" class="row"><label>Blueprint <select id="wBp"></select></label></div>
@@ -196,6 +224,78 @@ async function delBucket(sec,b){if(!confirm(`Delete bucket ${sec}/${b}? Blocked 
   const{st,j}=await api("POST","/api/topics",{action:"delete",section:sec,bucket:b});
   if(st!==200){alert(j.errors.join("; "));return;}await loadTopics();}
 async function api(m,u,b){const r=await fetch(u,{method:m,headers:{"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));return{st:r.status,j};}
+/* ---- Blueprints tab ---- */
+let BP_CACHE=[];
+async function loadBlueprints(){const{st,j}=await api("GET","/api/blueprints");if(st!==200)return;
+  BP_CACHE=j.blueprints||[];
+  const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  $("bpList").innerHTML=`<table><tr><th>File</th><th>Title / paper_id</th><th>Kind</th><th>Total</th><th>Sections (mix)</th><th>Difficulty</th><th></th></tr>`+
+   BP_CACHE.map(b=>{const secs=(b.sections||[]).map(s=>`${s.code}×${s.count}${s.mix?` (${Object.entries(s.mix).map(([k,v])=>k+":"+v).join(", ")})`:""}`).join("<br>");
+     const ds=b.difficulty_split?Object.entries(b.difficulty_split).map(([k,v])=>k+":"+v).join(" "):"<span class='muted'>—</span>";
+     return `<tr><td><b>${esc(b.file)}</b></td><td>${esc(b.title||"")}<br><span class="muted">${esc(b.paper_id||"")}</span>${b.error?`<br><span class="err">${esc(b.error)}</span>`:""}</td><td>${esc(b.kind||"")}</td><td>${b.total??"?"}</td><td>${secs}</td><td>${ds}</td><td style="white-space:nowrap"><button class="btn" onclick="bpEdit('${b.file}')">Edit</button> <button class="ghost btn" onclick="bpDuplicate('${b.file}')">Duplicate</button> <button class="ghost btn" onclick="bpDelete('${b.file}')">Delete</button> <button class="ghost btn" onclick="bpUse('${b.file}')" title="Jump to New paper with this blueprint selected">Use →</button></td></tr>`;}).join("")+"</table>";
+  $("wBp").innerHTML=BP_CACHE.map(b=>`<option value="${b.file}">${esc(b.title||b.file)}</option>`).join("");
+  if(lastBpFile)$("wBp").value=lastBpFile;}
+let lastBpFile="";
+function bpShowEditor(file,bp){$("bpEditorCard").style.display="block";
+  $("bpEdTitle").textContent=file?`Edit blueprint — ${file}`:"New blueprint";
+  $("bFile").value=file||"";$("bFile").disabled=!!file;
+  $("bPid").value=bp.paper_id||"";$("bTitle").value=bp.title||"";
+  $("bKind").value=bp.kind||"practice";$("bTime").value=bp.time_sec||8100;
+  const ds=bp.difficulty_split||{};$("bEasy").value=ds.Easy||0;$("bMed").value=ds.Medium||0;$("bHard").value=ds.Hard||0;
+  $("bSecs").innerHTML="";$("bCheck").innerHTML="";$("bSaveMsg").innerHTML="";
+  for(const s of (bp.sections||[]))bpAddSec(s.code,s.count,s.mix||null);
+  if(!(bp.sections||[]).length)bpAddSec("QA",10,null);
+  document.querySelector('#tabs button[data-t="bp"]').click();}
+function newBlueprint(){if(!Object.keys(TAX).length)alert("Taxonomy still loading — wait a second and retry.");
+  bpShowEditor("",{paper_id:"IPMAT-CUSTOM",title:"Custom paper",kind:"practice",time_sec:8100,difficulty_split:{},sections:[]});}
+async function bpEdit(file){const{st,j}=await api("GET","/api/blueprints/"+encodeURIComponent(file));
+  if(st!==200){alert((j.errors||["failed"]).join("; "));return;}
+  lastBpFile=file;bpShowEditor(file,j.blueprint);}
+function bpAddSec(code="QA",count=10,mix=null){const d=document.createElement("div");d.className="card";d.style.margin="0 0 10px";
+  const buckets=Object.keys((TAX[code]||{buckets:{}}).buckets||{});
+  d.innerHTML=`<div class="row"><select class="xCode" onchange="bpSecFlip(this)"><option>QA</option><option>LR</option><option>VARC</option></select>
+   <label>count <input class="xCount" size="4" value="${count}" oninput="bpSums()"></label>
+   <label><input type="checkbox" class="xUseMix" ${mix?"checked":""} onchange="bpSecFlip(this)"> use mix</label>
+   <button class="ghost btn" onclick="this.closest('.card').remove();bpSums()">Remove</button><span class="muted xSum"></span></div><div class="xMix"></div>`;
+  d.querySelector(".xCode").value=code;$("bSecs").appendChild(d);bpSecPaint(d,mix);bpSums();}
+function bpSecFlip(el){const card=el.closest(".card");bpSecPaint(card,null);bpSums();}
+function bpSecPaint(card,preset){const code=card.querySelector(".xCode").value;
+  const buckets=Object.keys((TAX[code]||{buckets:{}}).buckets||{});
+  const use=card.querySelector(".xUseMix").checked;
+  card.querySelector(".xMix").innerHTML=use?buckets.map(b=>`<label style="margin-right:10px">${b} <input data-b="${b}" class="xN" size="4" value="${preset&&preset[b]!=null?preset[b]:0}" oninput="bpSums()"></label>`).join("")||"<span class='muted'>no buckets in taxonomy</span>":"<span class='muted'>plain section count — any topics</span>";
+  bpSums();}
+function bpSums(){let total=0,de=parseInt($("bEasy").value||"0"),dm=parseInt($("bMed").value||"0"),dh=parseInt($("bHard").value||"0");
+  [...$("bSecs").children].forEach(card=>{const n=parseInt(card.querySelector(".xCount").value||"0");total+=n;
+    if(card.querySelector(".xUseMix").checked){const s=[...card.querySelectorAll(".xN")].reduce((a,i)=>a+(parseInt(i.value||"0")||0),0);
+      card.querySelector(".xSum").innerHTML=s===n?`<span class="ok">mix ✓ ${s}/${n}</span>`:`<span class="err">mix ${s}/${n} — must match</span>`;}
+    else card.querySelector(".xSum").textContent=`${n}Q, no mix`;});
+  return total;}
+function bpCollect(){const total=bpSums();
+  const ds={Easy:parseInt($("bEasy").value||"0"),Medium:parseInt($("bMed").value||"0"),Hard:parseInt($("bHard").value||"0")};
+  const hasDs=(ds.Easy+ds.Medium+ds.Hard)>0;
+  const sections=[...$("bSecs").children].map(card=>{const code=card.querySelector(".xCode").value,count=parseInt(card.querySelector(".xCount").value||"0");
+    const o={code,count};
+    if(card.querySelector(".xUseMix").checked){o.mix={};card.querySelectorAll(".xN").forEach(i=>o.mix[i.dataset.b]=parseInt(i.value||"0")||0);}
+    return o;});
+  return {paper_id:$("bPid").value.trim(),title:$("bTitle").value.trim(),kind:$("bKind").value,time_sec:parseInt($("bTime").value||"8100"),
+    marking:{correct:3,wrong:-1,skipped:0},sections,difficulty_split:hasDs?ds:undefined};}
+async function bpSave(){const file=$("bFile").value.trim();if(!file){$("bSaveMsg").innerHTML='<span class="err">file name required</span>';return;}
+  const{st,j}=await api("POST","/api/blueprints",{action:"save",file,blueprint:bpCollect()});
+  $("bSaveMsg").innerHTML=st===200?`<span class="ok">saved ${j.file}</span>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
+  if(st===200){lastBpFile=j.file;await loadBlueprints();}}
+async function bpDuplicate(file){const nf=prompt(`Copy ${file} to new file:`,file.replace(/\.yaml$/,"")+"-copy.yaml");
+  if(!nf)return;const{st,j}=await api("POST","/api/blueprints",{action:"duplicate",file,new_file:nf.trim()});
+  if(st!==200){alert((j.errors||["failed"]).join("; "));return;}await loadBlueprints();}
+async function bpDelete(file){if(!confirm(`Delete blueprint ${file}? Papers already made are unaffected.`))return;
+  const{st,j}=await api("POST","/api/blueprints",{action:"delete",file});
+  if(st!==200){alert((j.errors||["failed"]).join("; "));return;}await loadBlueprints();}
+async function bpDryRun(){const body=bpCollect();body.seed=42;
+  const{st,j}=await api("POST","/api/assemble",body);
+  $("bCheck").innerHTML=st===200?`<p class="ok">Feasible — ${j.paper.questions.length}Q would assemble${(j.warnings||[]).length?` with warnings: ${(j.warnings||[]).join("; ")}`:""}</p>`:`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;}
+function bpUse(file){lastBpFile=file||$("bFile").value.trim()||lastBpFile;
+  document.querySelector('#tabs button[data-t="wizard"]').click();
+  $("wSrc").value="blueprint";srcFlip();
+  if(lastBpFile)$("wBp").value=lastBpFile;}
 async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)return;
   $("bankTotal").textContent="· "+j.bank_questions+" questions";
   let h="<table><tr><th>Section</th><th>Bucket</th><th>Easy</th><th>Medium</th><th>Hard</th><th>Total</th></tr>";
@@ -204,8 +304,7 @@ async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)ret
   $("stats").innerHTML=h+"</table>";
   const p=await api("GET","/api/papers");
   $("papers").innerHTML=(p.j.papers||[]).map(e=>`<div class="row"><b>${e.title}</b><span class="muted">${e.id} · ${e.kind} · ${e.questions}Q · ${e.time_sec}s</span><a href="/public/index.html?paper=${encodeURIComponent(e.id)}" target="_blank">Open ↗</a></div>`).join("")||"<p class='muted'>none published yet</p>";
-  const bp=await api("GET","/api/blueprints");
-  $("wBp").innerHTML=(bp.j.blueprints||[]).map(b=>`<option value="${b.file}">${b.title||b.file}</option>`).join("");
+  await loadBlueprints();
   llmStat();}
 async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
   const{st,j}=await api("GET","/api/bank?"+q);
@@ -234,10 +333,14 @@ function secFlip(sel){const row=sel.closest(".row"),sec=sel.value,mode=row.query
   row.querySelector(".sTopic").innerHTML=keys.map(b=>`<option>${b}</option>`).join("");
   row.querySelector(".sTopic").style.display=mode==="single"?"":"none";}
 document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("sMode"))secFlip(e.target.closest(".row").querySelector(".sCode"));});
-let lastPaper=null;
+let lastPaper=null,pidTouched=false;
+function pidStamp(){const d=new Date(),p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;}
+function pidSuggest(){const slug=($("wTitle").value||"IPMAT-CUSTOM").toUpperCase().replace(/[^A-Z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"IPMAT-CUSTOM";return `${slug}-${pidStamp()}`;}
+function pidAuto(){if(!pidTouched)$("wPid").value=pidSuggest();}
 async function assemble(){const body={kind:$("wKind").value,title:$("wTitle").value,seed:parseInt($("wSeed").value||"42")};
   if($("wSrc").value==="blueprint"){body.blueprint=$("wBp").value;}
-  else{body.time_sec=$("wKind").value==="practice"?1800:8100;
+  else{if(!$("wPid").value.trim())$("wPid").value=pidSuggest();body.paper_id=$("wPid").value.trim();
+    body.time_sec=$("wKind").value==="practice"?1800:8100;
     body.difficulties=[...document.querySelectorAll("#wDiffs input:checked")].map(x=>x.value);
     body.sections=[...$("wSecs").children].map(r=>{const code=r.querySelector(".sCode").value,count=parseInt(r.querySelector(".sCount").value||"0");
       const o={code,count};
@@ -246,16 +349,24 @@ async function assemble(){const body={kind:$("wKind").value,title:$("wTitle").va
   const{st,j}=await api("POST","/api/assemble",body);
   if(st!==200){$("asmOut").innerHTML=`<p class="err">${(j.errors||["failed"]).join("; ")}</p>`;lastPaper=null;return;}
   lastPaper=j.paper;
+  if(!$("wPid").value.trim()||$("wSrc").value==="blueprint"){$("wPid").value=j.paper.paper_id;pidTouched=false;}
   const c={};j.paper.questions.forEach(q=>{c[q.section]=c[q.section]||{};const b=q.topic;c[q.section][b]=(c[q.section][b]||0)+1;});
   const dc={};j.paper.questions.forEach(q=>dc[q.difficulty]=(dc[q.difficulty]||0)+1);
   $("asmMsg").innerHTML='<span class="ok">assembled</span>';
   $("asmOut").innerHTML=`<h3>Preview: ${j.paper.title} (${j.paper.questions.length}Q)</h3>
    <pre>${JSON.stringify({mix:c,difficulty:dc,warnings:j.warnings},null,1)}</pre>
    <div class="row"><button class="btn" onclick="publish()">Publish to runner</button><span id="pubMsg"></span></div>`;}
-async function publish(){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
-  lastPaper.paper_id=(lastPaper.paper_id||"IPMAT-CUSTOM")+(lastPaper.kind==="simulation"?"-SIM":"");
-  const{st,j}=await api("POST","/api/papers/publish",{paper:lastPaper});
-  $("pubMsg").innerHTML=st===200?`<span class="ok">published</span> <a href="/public/index.html?paper=${encodeURIComponent(j.entry.id)}" target="_blank">Open in runner ↗</a>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
+async function publish(overwrite=false){if(!lastPaper)return;lastPaper.kind=$("wKind").value;
+  const typed=$("wPid").value.trim();
+  if(typed)lastPaper.paper_id=typed;
+  lastPaper.paper_id=lastPaper.paper_id||"IPMAT-CUSTOM";
+  if(lastPaper.kind==="simulation"&&!lastPaper.paper_id.endsWith("-SIM"))lastPaper.paper_id+="-SIM";
+  $("wPid").value=lastPaper.paper_id;
+  const{st,j}=await api("POST","/api/papers/publish",{paper:lastPaper,overwrite});
+  if(st===409){const msg=(j.errors||["paper ID already published"]).join("; ");
+    if(confirm(msg+" — overwrite it?")){await publish(true);}
+    else $("pubMsg").innerHTML=`<span class="err">${msg} (change the Paper ID and publish again)</span>`;return;}
+  $("pubMsg").innerHTML=st===200?`<span class="ok">published${j.overwrote?" (overwrote previous)":""}</span> <span class="muted">saved ${(j.files||[]).join(" + ")}</span> <a href="/public/index.html?paper=${encodeURIComponent(j.entry.id)}" target="_blank">Open in runner ↗</a>`:`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;
   if(st===200)dash();}
 async function llmStat(){const{st,j}=await api("GET","/api/llm/status");
   if(st!==200)return;
@@ -278,7 +389,7 @@ async function saveCfg(){const body={time_sec:parseInt($("cTime").value||"8100")
   sections:[...document.querySelectorAll("#cSecs input")].map(i=>({code:i.dataset.sec,count:parseInt(i.value||"0")}))};
   const{st,j}=await api("POST","/api/config",body);
   $("cfgMsg").innerHTML=st===200?'<span class="ok">saved</span>':`<span class="err">${(j.errors||["failed"]).join("; ")}</span>`;}
-dash();loadBank();loadCfg();loadTopics();
+dash();loadBank();loadCfg();loadTopics();pidAuto();
 </script>
 </body>
 </html>

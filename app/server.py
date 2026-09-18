@@ -129,20 +129,179 @@ def _append_bank(target, q):
 
 # ---------------- blueprints + assembly ----------------
 
+BP_FILE_RE = __import__("re").compile(r"^[a-z0-9][a-z0-9\-_]*\.yaml$")
+BP_KINDS = ("full_mock", "sectional", "practice", "simulation")
+
+
+def _validate_blueprint(bp, tax=None):
+    """Return [errors] for a blueprint dict (does not touch the bank)."""
+    errs = []
+    if not isinstance(bp, dict):
+        return ["blueprint must be an object"]
+    if not (bp.get("paper_id") or "").strip():
+        errs.append("paper_id is required")
+    if not (bp.get("title") or "").strip():
+        errs.append("title is required")
+    if bp.get("kind") not in BP_KINDS:
+        errs.append(f"kind must be one of {', '.join(BP_KINDS)}")
+    try:
+        t = int(bp.get("time_sec", 8100))
+        if t <= 0:
+            errs.append("time_sec must be > 0")
+    except Exception:
+        errs.append("time_sec must be an integer")
+    if bp.get("marking", {"correct": 3, "wrong": -1, "skipped": 0}) != \
+            {"correct": 3, "wrong": -1, "skipped": 0}:
+        errs.append("marking must stay +3/-1/0")
+    secs = bp.get("sections")
+    if not isinstance(secs, list) or not secs:
+        errs.append("sections must be a non-empty list")
+        return errs
+    tax = tax or _taxonomy()
+    total = 0
+    seen_codes = set()
+    for s in secs:
+        code = s.get("code")
+        if code not in ("QA", "LR", "VARC"):
+            errs.append(f"bad section code {code!r} (use QA/LR/VARC)")
+            continue
+        if code in seen_codes:
+            errs.append(f"duplicate section {code}")
+        seen_codes.add(code)
+        try:
+            n = int(s.get("count", 0))
+        except Exception:
+            errs.append(f"{code}: count must be an integer")
+            continue
+        if n <= 0:
+            errs.append(f"{code}: count must be > 0")
+            continue
+        total += n
+        mix = s.get("mix")
+        if mix:
+            if not isinstance(mix, dict):
+                errs.append(f"{code}: mix must be an object")
+                continue
+            known = set(tax.get(code, {}).get("buckets", {}))
+            for b, bn in mix.items():
+                if b not in known:
+                    errs.append(f"{code}/{b}: unknown bucket (valid: {sorted(known)})")
+                try:
+                    if int(bn) < 0:
+                        errs.append(f"{code}/{b}: mix count must be >= 0")
+                except Exception:
+                    errs.append(f"{code}/{b}: mix count must be an integer")
+            if sum(int(v) for v in mix.values()
+                   if isinstance(v, int) or str(v).isdigit()) != n:
+                errs.append(f"{code}: mix sums to {sum(mix.values())}, "
+                            f"must equal count {n}")
+    ds = bp.get("difficulty_split")
+    if ds:
+        if not isinstance(ds, dict) or \
+                any(d not in ("Easy", "Medium", "Hard") for d in ds):
+            errs.append("difficulty_split keys must be Easy/Medium/Hard")
+        else:
+            try:
+                if sum(int(v) for v in ds.values()) != total:
+                    errs.append(f"difficulty_split sums to {sum(ds.values())}, "
+                                f"must equal total {total}")
+            except Exception:
+                errs.append("difficulty_split values must be integers")
+    return errs
+
+
+def _blueprint_summary(path):
+    import yaml
+    try:
+        bp = yaml.safe_load(path.read_text(encoding="utf-8"))
+        total = sum(int(s.get("count", 0)) for s in bp.get("sections", []))
+        return {"file": path.name, "paper_id": bp.get("paper_id"),
+                "title": bp.get("title"), "kind": bp.get("kind"),
+                "time_sec": bp.get("time_sec", 8100),
+                "total": total,
+                "sections": bp.get("sections", []),
+                "difficulty_split": bp.get("difficulty_split"),
+                "answer_balance": bp.get("answer_balance")}
+    except Exception as e:
+        return {"file": path.name, "error": str(e)}
+
+
 @app.get("/api/blueprints")
 def blueprints():
-    import yaml
-    out = []
-    for f in sorted((ROOT / "blueprints").glob("*.yaml")):
-        try:
-            bp = yaml.safe_load(f.read_text(encoding="utf-8"))
-            out.append({"file": f.name, "paper_id": bp.get("paper_id"),
-                        "title": bp.get("title"), "kind": bp.get("kind"),
-                        "sections": bp.get("sections", []),
-                        "difficulty_split": bp.get("difficulty_split")})
-        except Exception as e:
-            out.append({"file": f.name, "error": str(e)})
+    out = [_blueprint_summary(f)
+           for f in sorted((ROOT / "blueprints").glob("*.yaml"))]
     return jsonify({"blueprints": out})
+
+
+@app.get("/api/blueprints/<name>")
+def blueprint_detail(name):
+    import yaml
+    if not BP_FILE_RE.match(name or ""):
+        return jsonify({"ok": False, "errors": ["bad blueprint filename"]}), 422
+    path = ROOT / "blueprints" / name
+    if not path.exists():
+        return jsonify({"ok": False, "errors": ["blueprint not found"]}), 404
+    try:
+        bp = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return jsonify({"ok": False, "errors": [f"YAML error: {e}"]}), 422
+    return jsonify({"ok": True, "file": name, "blueprint": bp,
+                    "raw": path.read_text(encoding="utf-8")})
+
+
+@app.post("/api/blueprints")
+def blueprints_manage():
+    """Manage blueprints. Actions:
+    save {file, blueprint} — create or overwrite (validated)
+    duplicate {file, new_file} — copy
+    delete {file} — remove (no questions reference blueprints directly)
+    """
+    import yaml
+    body = request.get_json(force=True) or {}
+    action = body.get("action", "")
+    fname = (body.get("file") or "").strip()
+
+    if action == "save":
+        bp = body.get("blueprint")
+        if not fname or not BP_FILE_RE.match(fname):
+            return jsonify({"ok": False, "errors": [
+                "file must match [a-z0-9][a-z0-9-_]*.yaml"]}), 422
+        errs = _validate_blueprint(bp)
+        if errs:
+            return jsonify({"ok": False, "errors": errs}), 422
+        path = ROOT / "blueprints" / fname
+        path.write_text(yaml.safe_dump(bp, sort_keys=False, allow_unicode=True),
+                        encoding="utf-8")
+        return jsonify({"ok": True, "file": fname,
+                        "summary": _blueprint_summary(path)})
+
+    if action == "duplicate":
+        new_file = (body.get("new_file") or "").strip()
+        if not BP_FILE_RE.match(fname) or not BP_FILE_RE.match(new_file):
+            return jsonify({"ok": False, "errors": ["bad filename(s)"]}), 422
+        src = ROOT / "blueprints" / fname
+        dst = ROOT / "blueprints" / new_file
+        if not src.exists():
+            return jsonify({"ok": False, "errors": ["source not found"]}), 404
+        if dst.exists():
+            return jsonify({"ok": False, "errors": [
+                f"{new_file} already exists"]}), 422
+        dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        return jsonify({"ok": True, "file": new_file,
+                        "summary": _blueprint_summary(dst)})
+
+    if action == "delete":
+        if not BP_FILE_RE.match(fname):
+            return jsonify({"ok": False, "errors": ["bad filename"]}), 422
+        path = ROOT / "blueprints" / fname
+        if not path.exists():
+            return jsonify({"ok": False, "errors": ["blueprint not found"]}), 404
+        if len(list((ROOT / "blueprints").glob("*.yaml"))) <= 1:
+            return jsonify({"ok": False, "errors": [
+                "cannot delete the last blueprint"]}), 422
+        path.unlink()
+        return jsonify({"ok": True, "deleted": fname})
+    return jsonify({"ok": False, "errors": [f"unknown action {action}"]}), 422
 
 
 @app.post("/api/assemble")
@@ -343,18 +502,29 @@ def publish():
     errs = banklib.validate_all(paper, QSCHEMA)
     if errs:
         return jsonify({"ok": False, "errors": errs}), 422
-    pid = paper.get("paper_id", "IPMAT-PAPER")
+    pid = (paper.get("paper_id") or "IPMAT-PAPER").strip()
+    if not pid:
+        return jsonify({"ok": False, "errors": ["paper_id is required"]}), 422
+    paper["paper_id"] = pid
     safe = "".join(c if (c.isalnum() or c in "-_") else "-" for c in pid)
+    man = _manifest()
+    clash = next((e for e in man.get("papers", []) if e.get("id") == pid), None)
+    if clash and not body.get("overwrite"):
+        return jsonify({"ok": False, "errors": [
+            f"paper_id '{pid}' already published as '{clash.get('title')}' "
+            f"({clash.get('file')}) — change the Paper ID or confirm overwrite"],
+            "collision": clash}), 409
     _write_json(PAPERS_DIR / f"{safe}.json", paper)
     _write_json(PUBLIC_PAPERS / f"{safe}.json", paper)
-    man = _manifest()
     entry = {"id": pid, "title": paper.get("title", pid), "file": f"{safe}.json",
              "kind": paper.get("kind", "full_mock"),
              "questions": len(paper["questions"]),
              "time_sec": paper.get("spec", {}).get("time_sec", 8100)}
     man["papers"] = [e for e in man.get("papers", []) if e.get("id") != pid] + [entry]
     _write_json(PUBLIC_PAPERS / "index.json", man)
-    return jsonify({"ok": True, "entry": entry})
+    return jsonify({"ok": True, "entry": entry, "overwrote": bool(clash),
+                    "files": [f"papers/{safe}.json",
+                              f"public/papers/{safe}.json"]})
 
 
 # ---------------- config ----------------

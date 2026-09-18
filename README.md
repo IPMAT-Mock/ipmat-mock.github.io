@@ -25,7 +25,7 @@ py -m venv .venv
 
 ## Workflow (admin app, preferred)
 1. `.\.venv\Scripts\python.exe app\server.py` → open http://127.0.0.1:5057
-2. New paper tab: pick exam kind (mock/simulation/practice), a blueprint or a custom spec (count, subject, single-topic-or-mix, difficulty) → Assemble → preview → Publish.
+2. New paper tab: pick exam kind (mock/simulation/practice), a blueprint or a custom spec (count, subject, single-topic-or-mix, difficulty) → Assemble → preview → Publish. Each paper needs a unique Paper ID (auto-suggested; it becomes the `papers/<id>.json` filename) — reusing an ID is blocked unless you confirm the overwrite.
 3. Take it in `public/index.html` (paper picker or `?paper=<id>`). Serve `public/` for full manifest support.
 4. Add questions via the Questions tab (schema-validated) or the LLM tab (needs `app/llm.config.json` enabled with an OpenAI-compatible endpoint).
 

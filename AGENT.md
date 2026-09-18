@@ -1,6 +1,6 @@
 # AGENT.md — IPMAT Mock System
 
-Version: 3.1.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
+Version: 3.4.0 | Canonical spec: IIMB IPMAT 60Q, 135 min (8100 s), +3 / −1 / 0 | Status: active
 
 ## 1. What this project is
 Hybrid mock-generation system for IPMAT (IIMB pattern) with a local admin app:
@@ -8,7 +8,7 @@ LLM prompts generate topic batches → validator gates them into the bank →
 assembler builds blueprint-driven papers (full mocks, sectionals, practice,
 simulations) → `public/index.html` runner delivers Study/Exam/Simulation modes
 with +3/−1 scoring. Admin UI (`app/admin.html` + Flask `app/server.py`) manages
-bank, papers, config, and an opt-in LLM loop. `public/` is the Pages publish
+bank, topics, blueprints, papers, config, and an opt-in LLM loop. `public/` is the Pages publish
 boundary (Pages deploys `public/` only).
 
 ## 2. Canonical spec (do not drift)
@@ -40,8 +40,8 @@ prompts/ ──generate──▶ bank/*.jsonl ──assemble──▶ papers/*.j
 | Migrator | `scripts/migrate_legacy.py` | legacy (+4/−1, `stem/answer`, Prompt1) → v2 |
 | Runner | `public/index.html` | Study/Exam/Simulation modes; paper picker from `public/papers/index.json`; `?paper=<id\|file>`; Simulation = strict, review-after-submit |
 | Manifest | `public/papers/index.json` | published set (id/title/file/kind/questions/time_sec) |
-| Admin BE | `app/server.py` (:5057, 127.0.0.1) | `/api/bank|blueprints|assemble|papers/publish|config|llm/*`; LLM loop gated by `app/llm.config.json` (`enabled`) |
-| Admin UI | `app/admin.html` | dashboard, bank browser+add, paper wizard (kind/count/subject/single-or-mix/difficulty), LLM, config |
+| Admin BE | `app/server.py` (:5057, 127.0.0.1) | `/api/bank|blueprints|assemble|papers/publish|config|llm/*`; LLM loop gated by `app/llm.config.json` (`enabled`); publish rejects duplicate paper_id with 409 unless `overwrite:true` |
+| Admin UI | `app/admin.html` | dashboard, bank browser+add, blueprint manager (CRUD + dry-run vs bank), paper wizard (kind/count/subject/single-or-mix/difficulty, unique auto-suggested Paper ID, overwrite confirm, saved-file message), LLM, config |
 | Config | `config/exam.config.json` | time/marking/sections (marking locked +3/−1/0 by server) |
 
 Data flow: batch (prompt) → validate → bank → assemble (seeded) → validate
@@ -62,3 +62,8 @@ vs blueprint → paper → runner. Reproduce any paper via blueprint + seed.
   arrangements / coded relations / ranking / series / cause-effect; QA with DI
   sets, Bayes, mixture, HCF/LCM, CI; image-based stems via `stimulus_image`.
 - Update this file (bump version) when spec, schema, or architecture changes.
+- Docs-with-feature (mandatory): every user-facing admin change ships its guide
+  in the same edit — (a) a section in the Guide tab (`app/admin.html#t-guide`,
+  anchor `g-<area>`), (b) a `.hint` paragraph on the touched tab itself
+  explaining the workflow, (c) this file + `README.md` updated when behavior
+  or workflows change. No feature is "done" without its guide.

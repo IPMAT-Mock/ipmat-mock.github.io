@@ -54,7 +54,7 @@ pre{background:#1f1b16;color:#e8e0d0;padding:12px;border-radius:8px;overflow:aut
       <button class="btn" onclick="loadBank()">Filter</button>
     </div><div id="bankOut"></div></div>
   <div class="card"><h2>Add question</h2>
-    <p class="hint"><b>Add</b> — appends <b>one</b> question to the bank after schema validation. Required: unique <code>qid</code> (e.g. <code>QA-ARITH-014</code>), <code>section</code> (QA/LR/VARC), <code>topic</code> (use a bucket name so mixes can find it), <code>difficulty</code> (Easy/Medium/Hard), <code>stem</code>, 4 <code>options</code>, <code>answer_index</code> (0–3), <code>solution</code>. New questions become usable in papers immediately.</p>
+    <p class="hint"><b>Add</b> — appends <b>one</b> question to the bank after schema validation. Required: unique <code>qid</code> (e.g. <code>QA-ARITH-014</code>), <code>section</code> (QA/LR/VARC), <code>topic</code> (use a bucket name so mixes can find it), <code>difficulty</code> (Easy/Medium/Hard), <code>stem</code>, 4 <code>options</code>, <code>answer_index</code> (0–3), <code>solution</code> (the full explanation — <b>required</b> by the schema). <code>hint</code> is optional but recommended: a short nudge shown alongside the question detail. New questions become usable in papers immediately.</p>
     <p class="muted">Paste one v2 question JSON. <button class="ghost btn" onclick="fillTemplate()">Insert template</button></p>
     <textarea id="newQ" rows="12" placeholder='{"qid": "...", ...}'></textarea>
     <div class="row"><button class="btn" onclick="addQ()">Validate &amp; append to bank</button><span id="addMsg"></span></div></div>
@@ -161,8 +161,13 @@ async function dash(){const{st,j}=await api("GET","/api/health");if(st!==200)ret
   llmStat();}
 async function loadBank(){const q=new URLSearchParams({section:$("fSec").value,topic:$("fTopic").value.trim(),difficulty:$("fDiff").value,q:$("fQ").value.trim()});
   const{st,j}=await api("GET","/api/bank?"+q);
-  $("bankOut").innerHTML=`<p class="muted">${j.count} match</p><table><tr><th>qid</th><th>sec</th><th>topic</th><th>diff</th><th>stem</th><th>ans</th></tr>`+
-   j.questions.map(x=>`<tr><td>${x.qid}</td><td>${x.section}</td><td>${x.topic}</td><td>${x.difficulty}</td><td class="stem">${(x.stem||"").slice(0,140)}</td><td>${"ABCD"[x.answer_index]}</td></tr>`).join("")+"</table";}
+  const esc=s=>String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  window._bank=j.questions;
+  $("bankOut").innerHTML=`<p class="muted">${j.count} match — click + on a row for options, hint and solution.</p><table><tr><th></th><th>qid</th><th>sec</th><th>topic</th><th>diff</th><th>stem</th><th>ans</th></tr>`+
+   j.questions.map((x,i)=>{const opts=(x.options||[]).map((o,k)=>`<div>${"ABCD"[k]}. ${esc(o)}${k===x.answer_index?' <b class="ok">✓</b>':''}</div>`).join("");
+    const det=`${x.passage?`<div><b>Passage:</b> ${esc(x.passage)}</div>`:""}<div><b>Options:</b>${opts}</div><div><b>Hint:</b> ${x.hint?esc(x.hint):'<span class="muted">— none</span>'}</div><div><b>Solution:</b> ${x.solution?esc(x.solution):'<span class="err">— missing</span>'}</div>`;
+    return `<tr><td><button class="ghost btn" onclick="toggleQ(${i})">+</button></td><td>${esc(x.qid)}</td><td>${x.section}</td><td>${esc(x.topic)}</td><td>${x.difficulty}</td><td class="stem">${esc((x.stem||"").slice(0,140))}</td><td>${"ABCD"[x.answer_index]}</td></tr><tr id="qd${i}" style="display:none"><td></td><td colspan="6">${det}</td></tr>`;}).join("")+"</table>";}
+function toggleQ(i){const r=$("qd"+i);r.style.display=r.style.display==="none"?"":"none";}
 function fillTemplate(){$("newQ").value=JSON.stringify({qid:"QA-ARITH-014",section:"QA",topic:"Arithmetic",subtopic:"Percentages",difficulty:"Easy",marks:{correct:3,wrong:-1,skipped:0},time_sec:90,stem:"",options:["","","",""],answer_index:0,hint:"",solution:""},null,1);}
 async function addQ(){let q;try{q=JSON.parse($("newQ").value);}catch(e){$("addMsg").innerHTML='<span class="err">bad JSON</span>';return;}
   const{st,j}=await api("POST","/api/bank",q);

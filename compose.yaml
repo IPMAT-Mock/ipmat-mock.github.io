@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: Containerfile
-    image: ipmat-stage:latest
+    image: localhost/ipmat-stage:latest
     ports:
       - "5057:5057"
     environment:

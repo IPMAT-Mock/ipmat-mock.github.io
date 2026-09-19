@@ -22,7 +22,6 @@ COPY prompts/ ./prompts/
 COPY public/ ./public/
 COPY schemas/ ./schemas/
 COPY scripts/ ./scripts/
-COPY sections/ ./sections/
 
 # Runtime state dir (students.json lives here; mount a volume over it)
 RUN mkdir -p data && \
